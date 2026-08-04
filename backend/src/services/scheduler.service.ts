@@ -131,6 +131,10 @@ export class SchedulerService {
     return updated;
   }
 
+  async getMeetingById(id: string): Promise<IMeetingDocument | null> {
+    return this.meetingRepository.findById(id);
+  }
+
   async getAllRooms() {
     return this.roomRepository.findAll();
   }

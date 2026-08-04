@@ -2,18 +2,20 @@ import { create } from 'zustand';
 
 type Theme = 'light' | 'dark' | 'system';
 
-interface UIState {
+export interface UIState {
   theme: Theme;
   selectedDate: string; // YYYY-MM-DD
   searchQuery: string;
   isCreateDialogOpen: boolean;
   selectedRoomId: string | null;
+  activeTab: 'dashboard' | 'meetings';
   
   setTheme: (theme: Theme) => void;
   setSelectedDate: (date: string) => void;
   setSearchQuery: (query: string) => void;
   setCreateDialogOpen: (open: boolean) => void;
   setSelectedRoomId: (roomId: string | null) => void;
+  setActiveTab: (tab: 'dashboard' | 'meetings') => void;
 }
 
 const getInitialTheme = (): Theme => {
@@ -35,6 +37,7 @@ export const useUIStore = create<UIState>((set) => ({
   searchQuery: '',
   isCreateDialogOpen: false,
   selectedRoomId: null,
+  activeTab: 'dashboard',
 
   setTheme: (theme) => {
     localStorage.setItem('theme', theme);
@@ -55,4 +58,5 @@ export const useUIStore = create<UIState>((set) => ({
   setSearchQuery: (searchQuery) => set({ searchQuery }),
   setCreateDialogOpen: (isCreateDialogOpen) => set({ isCreateDialogOpen }),
   setSelectedRoomId: (selectedRoomId) => set({ selectedRoomId }),
+  setActiveTab: (activeTab) => set({ activeTab }),
 }));

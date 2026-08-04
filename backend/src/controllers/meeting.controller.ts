@@ -16,6 +16,28 @@ export const getMeetings = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
+export const getMeetingById = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const meeting = await schedulerService.getMeetingById(id);
+
+  if (!meeting) {
+    res.status(404).json({
+      success: false,
+      error: {
+        code: 'MEETING_NOT_FOUND',
+        message: 'The requested meeting could not be found.',
+      },
+    });
+    return;
+  }
+
+  res.status(200).json({
+    success: true,
+    data: meeting,
+    message: 'Meeting fetched successfully',
+  });
+});
+
 export const bookMeeting = asyncHandler(async (req: Request, res: Response) => {
   const { title, startTime, endTime } = req.body;
 

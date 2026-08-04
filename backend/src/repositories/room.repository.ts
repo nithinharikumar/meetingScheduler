@@ -3,15 +3,22 @@ import { IRoom, IRoomDocument } from '../interfaces/room.interface';
 
 export class RoomRepository {
   async findAll(): Promise<IRoomDocument[]> {
-    return RoomModel.find({}).sort({ name: 1 }).lean<IRoomDocument[]>().exec();
+    return RoomModel.find({}, 'name capacity description')
+      .sort({ name: 1 })
+      .lean<IRoomDocument[]>()
+      .exec();
   }
 
   async findById(id: string): Promise<IRoomDocument | null> {
-    return RoomModel.findById(id).lean<IRoomDocument>().exec();
+    return RoomModel.findById(id, 'name capacity description')
+      .lean<IRoomDocument>()
+      .exec();
   }
 
   async findByName(name: string): Promise<IRoomDocument | null> {
-    return RoomModel.findOne({ name }).lean<IRoomDocument>().exec();
+    return RoomModel.findOne({ name }, 'name capacity description')
+      .lean<IRoomDocument>()
+      .exec();
   }
 
   async create(roomData: IRoom): Promise<IRoomDocument> {

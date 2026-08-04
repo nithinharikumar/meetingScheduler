@@ -1,10 +1,12 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:wght@100..900&display=swap');
 
 @theme {
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-background: var(--background);
+  --color-background-secondary: var(--background-secondary);
   --color-foreground: var(--foreground);
 
   --color-primary: var(--primary);
@@ -13,87 +15,117 @@
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
 
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
 
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
 
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
 
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+
+  --font-sans: 'Geist', 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 @layer base {
   :root {
-    --background: hsl(240 10% 98%);
-    --foreground: hsl(240 10% 3.9%);
+    --background: hsl(0 0% 100%);
+    --background-secondary: hsl(210 40% 98%);
+    --foreground: hsl(224 71.4% 4.1%);
 
     --card: hsl(0 0% 100%);
-    --card-foreground: hsl(240 10% 3.9%);
+    --card-foreground: hsl(224 71.4% 4.1%);
 
     --popover: hsl(0 0% 100%);
-    --popover-foreground: hsl(240 10% 3.9%);
+    --popover-foreground: hsl(224 71.4% 4.1%);
 
-    --primary: hsl(263.4 70% 50.4%);
+    /* Primary: Purple #7C3AED */
+    --primary: hsl(263 83% 58%);
     --primary-foreground: hsl(210 20% 98%);
 
-    --secondary: hsl(240 4.8% 95.9%);
-    --secondary-foreground: hsl(240 5.9% 10%);
+    /* Secondary: #8B5CF6 */
+    --secondary: hsl(258 90% 66%);
+    --secondary-foreground: hsl(210 20% 98%);
 
-    --muted: hsl(240 4.8% 95.9%);
-    --muted-foreground: hsl(240 3.8% 46.1%);
+    /* Muted states for general UI */
+    --muted: hsl(220 14.3% 95.9%);
+    --muted-foreground: hsl(220 8.9% 46.1%);
 
-    --accent: hsl(263 30% 96%);
-    --accent-foreground: hsl(263.4 70% 35.4%);
+    /* Accent: #A855F7 */
+    --accent: hsl(271 91% 65%);
+    --accent-foreground: hsl(210 20% 98%);
 
-    --destructive: hsl(0 84.2% 60.2%);
-    --destructive-foreground: hsl(0 0% 98%);
+    /* Semantic Status Colors */
+    --success: hsl(142 71% 45%);
+    --success-foreground: hsl(355.7 100% 99.7%);
 
-    --border: hsl(240 5.9% 90%);
-    --input: hsl(240 5.9% 90%);
-    --ring: hsl(263.4 70% 50.4%);
+    --warning: hsl(38 92% 50%);
+    --warning-foreground: hsl(355.7 100% 99.7%);
 
-    --radius: 0.75rem;
+    --destructive: hsl(0 84% 60%);
+    --destructive-foreground: hsl(355.7 100% 99.7%);
+
+    --border: hsl(220 13% 91%);
+    --input: hsl(220 13% 91%);
+    --ring: hsl(263 83% 58%);
+
+    --radius: 12px;
   }
 
   .dark {
-    --background: hsl(240 10% 3.9%);
+    --background: hsl(240 10% 3.9%); /* #09090B */
+    --background-secondary: hsl(240 10% 6%);
     --foreground: hsl(0 0% 98%);
 
-    --card: hsl(240 10% 7%);
+    --card: hsl(240 10% 10%); /* #18181B */
     --card-foreground: hsl(0 0% 98%);
 
-    --popover: hsl(240 10% 7%);
+    --popover: hsl(240 10% 10%);
     --popover-foreground: hsl(0 0% 98%);
 
-    --primary: hsl(263.4 70% 60.4%);
-    --primary-foreground: hsl(240 10% 3.9%);
+    /* Primary: Purple #7C3AED */
+    --primary: hsl(263 83% 58%);
+    --primary-foreground: hsl(210 20% 98%);
 
-    --secondary: hsl(240 3.7% 15.9%);
-    --secondary-foreground: hsl(0 0% 98%);
+    /* Secondary: #8B5CF6 */
+    --secondary: hsl(258 90% 66%);
+    --secondary-foreground: hsl(210 20% 98%);
 
     --muted: hsl(240 3.7% 15.9%);
     --muted-foreground: hsl(240 5% 64.9%);
 
-    --accent: hsl(263 30% 15%);
-    --accent-foreground: hsl(263.4 70% 80.4%);
+    /* Accent: #A855F7 */
+    --accent: hsl(271 91% 65%);
+    --accent-foreground: hsl(210 20% 98%);
 
-    --destructive: hsl(0 62.8% 50.6%);
-    --destructive-foreground: hsl(0 0% 98%);
+    --success: hsl(142 71% 45%);
+    --success-foreground: hsl(355.7 100% 99.7%);
+
+    --warning: hsl(38 92% 50%);
+    --warning-foreground: hsl(355.7 100% 99.7%);
+
+    --destructive: hsl(0 84% 60%);
+    --destructive-foreground: hsl(355.7 100% 99.7%);
 
     --border: hsl(240 3.7% 15.9%);
     --input: hsl(240 3.7% 15.9%);
-    --ring: hsl(263.4 70% 60.4%);
+    --ring: hsl(263 83% 58%);
   }
 }
 
@@ -105,11 +137,12 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-sans);
+    transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease;
   }
 }
 
-/* Custom scrollbars for timeline schedule grid */
+/* Custom scrollbars for timeline schedule grid & table */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -126,4 +159,15 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--muted-foreground);
+}
+
+/* Keyframes for micro-interactions */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+.animate-shake {
+  animation: shake 0.2s ease-in-out 0s 2;
 }
