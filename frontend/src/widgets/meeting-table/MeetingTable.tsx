@@ -182,8 +182,8 @@ export const MeetingTable: React.FC = () => {
                       key={meeting._id} 
                       className="hover:bg-muted-foreground/5 dark:hover:bg-muted/15 transition-colors group"
                     >
-                      <td className="p-4 font-bold text-foreground">{meeting.title}</td>
-                      <td className="p-4">
+                      <td className="py-5 px-4 font-bold text-foreground">{meeting.title}</td>
+                      <td className="py-5 px-4">
                         <div className="flex items-center gap-2">
                           <Badge variant={badgeVariant} className="px-2 py-0.5 border-0">
                             {meeting.room.name}
@@ -193,18 +193,18 @@ export const MeetingTable: React.FC = () => {
                           </span>
                         </div>
                       </td>
-                      <td className="p-4 font-semibold text-muted-foreground">
+                      <td className="py-5 px-4 font-semibold text-muted-foreground">
                         <span className="flex items-center gap-1.5">
                           <Clock className="w-3.5 h-3.5 text-primary" />
                           {startTimeStr} - {endTimeStr}
                         </span>
                       </td>
-                      <td className="p-4">
+                      <td className="py-5 px-4">
                         <Badge variant="success" className="px-2 py-0.5 border-0 uppercase text-[9px] tracking-wider font-bold">
                           Confirmed
                         </Badge>
                       </td>
-                      <td className="p-4 text-right">
+                      <td className="py-5 px-4 text-right">
                         <DropdownMenu
                           trigger={
                             <Button 

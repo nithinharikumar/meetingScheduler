@@ -24,9 +24,11 @@ export const Header: React.FC = () => {
 
         {/* Brand logo & name */}
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white font-bold shadow-md shadow-primary/20 shrink-0">
-            S
-          </div>
+          <img
+            src="/SyncSpace.png"
+            alt="SyncSpace Logo"
+            className="w-8 h-8 rounded-lg object-contain shrink-0 shadow-md shadow-primary/20"
+          />
           <div className="hidden sm:block">
             <h1 className="font-bold text-sm leading-none tracking-tight text-foreground">SyncSpace</h1>
             <span className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider">
