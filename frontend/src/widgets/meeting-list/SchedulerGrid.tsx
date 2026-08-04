@@ -48,7 +48,7 @@ export const SchedulerGrid: React.FC = () => {
   const filteredMeetings = useMemo(() => {
     return meetings.filter((meeting) => {
       const matchesSearch = meeting.title.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesRoom = !selectedRoomId || meeting.room._id === selectedRoomId;
+      const matchesRoom = !selectedRoomId || String(meeting.room._id) === selectedRoomId;
       const isConfirmed = meeting.status === 'CONFIRMED';
       return matchesSearch && matchesRoom && isConfirmed;
     });

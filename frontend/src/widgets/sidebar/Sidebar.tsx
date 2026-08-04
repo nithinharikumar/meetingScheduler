@@ -190,7 +190,7 @@ export const Sidebar: React.FC = () => {
         </button>
 
         {rooms.map((room, index) => {
-          const isSelected = selectedRoomId === room._id;
+          const isSelected = selectedRoomId === String(room._id);
           const badgeVariant = getRoomBadgeVariant(room.name);
           const RoomIcon = getRoomIcon(index);
           const iconColor = getRoomColor(index);
@@ -198,7 +198,7 @@ export const Sidebar: React.FC = () => {
           return (
             <button
               key={room._id}
-              onClick={() => setSelectedRoomId(room._id)}
+              onClick={() => setSelectedRoomId(String(room._id))}
               title={collapsed ? `${room.name} (${room.capacity} seats)` : undefined}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-colors duration-200 cursor-pointer ${
                 isSelected
@@ -258,9 +258,9 @@ export const Sidebar: React.FC = () => {
     <>
       {/* Desktop Sidebar (visible on md and up) */}
       <motion.aside
-        animate={{ width: collapsed ? 72 : 240 }}
+        animate={{ width: collapsed ? 80 : 240 }}
         transition={{ duration: 0.2, ease: 'easeInOut' }}
-        className="hidden md:block shrink-0 sticky top-[73px] h-[calc(100vh-73px)] z-10 overflow-hidden"
+        className="hidden md:flex md:flex-col shrink-0 h-full z-10 overflow-hidden"
       >
         <div className="w-full h-full">
           {sidebarContent}
@@ -428,14 +428,14 @@ const SidebarContentMobile: React.FC = () => {
         </button>
 
         {rooms.map((room, index) => {
-          const isSelected = selectedRoomId === room._id;
+          const isSelected = selectedRoomId === String(room._id);
           const badgeVariant = getRoomBadgeVariant(room.name);
           const RoomIcon = getRoomIcon(index);
           const iconColor = getRoomColor(index);
           return (
             <button
               key={room._id}
-              onClick={() => { setSelectedRoomId(room._id); setMobileMenu(false); }}
+              onClick={() => { setSelectedRoomId(String(room._id)); setMobileMenu(false); }}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-colors duration-200 cursor-pointer ${
                 isSelected
                   ? 'bg-card text-foreground border border-border/80 shadow-sm'
