@@ -178,4 +178,49 @@ describe('Meeting Scheduler API & Algorithm Tests', () => {
         expect(retryRes.status).toBe(201);
         expect(retryRes.body.data.room.name).toBe('Boardroom');
     });
+    describe('GET /api/meetings/stats', () => {
+        it('should return correct dashboard stats for today', async () => {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            // Setup some meetings for tomorrow (definitely in the future)
+            const startTime1 = new Date(tomorrow);
+            startTime1.setHours(9, 0, 0, 0);
+            const endTime1 = new Date(tomorrow);
+            endTime1.setHours(10, 0, 0, 0); // 60 minutes duration
+            const startTime2 = new Date(tomorrow);
+            startTime2.setHours(11, 0, 0, 0);
+            const endTime2 = new Date(tomorrow);
+            endTime2.setHours(12, 30, 0, 0); // 90 minutes duration
+            // Book meeting 1
+            const res1 = await (0, supertest_1.default)(index_1.default)
+                .post('/api/meetings')
+                .send({
+                title: 'Meeting 1',
+                startTime: startTime1.toISOString(),
+                endTime: endTime1.toISOString(),
+            });
+            expect(res1.status).toBe(201);
+            // Book meeting 2
+            const res2 = await (0, supertest_1.default)(index_1.default)
+                .post('/api/meetings')
+                .send({
+                title: 'Meeting 2',
+                startTime: startTime2.toISOString(),
+                endTime: endTime2.toISOString(),
+            });
+            expect(res2.status).toBe(201);
+            // Fetch stats
+            const statsRes = await (0, supertest_1.default)(index_1.default)
+                .get('/api/meetings/stats')
+                .query({ date: tomorrow.toISOString() });
+            expect(statsRes.status).toBe(200);
+            expect(statsRes.body.success).toBe(true);
+            expect(statsRes.body.data.totalMeetingsToday).toBe(2);
+            expect(statsRes.body.data.averageDuration).toBe(75); // (60 + 90) / 2 = 75
+            // Total working minutes = 4200. Meetings today duration = 150.
+            // Occupancy rate = (150 / 4200) * 100 = 4%
+            expect(statsRes.body.data.occupancyRateToday).toBe(4);
+            expect(statsRes.body.data.mostUsedRoom).toBe('Boardroom');
+        });
+    });
 });

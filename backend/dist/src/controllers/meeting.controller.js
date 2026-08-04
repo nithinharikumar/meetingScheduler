@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getRooms = exports.cancelMeeting = exports.bookMeeting = exports.getMeetings = void 0;
+exports.getDashboardStats = exports.getRooms = exports.cancelMeeting = exports.bookMeeting = exports.getMeetings = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const scheduler_service_1 = require("../services/scheduler.service");
 exports.getMeetings = (0, express_async_handler_1.default)(async (req, res) => {
@@ -76,5 +76,15 @@ exports.getRooms = (0, express_async_handler_1.default)(async (req, res) => {
         success: true,
         data: rooms,
         message: 'Rooms fetched successfully',
+    });
+});
+exports.getDashboardStats = (0, express_async_handler_1.default)(async (req, res) => {
+    const dateStr = req.query.date;
+    const date = dateStr ? new Date(dateStr) : new Date();
+    const stats = await scheduler_service_1.schedulerService.getDashboardStats(date);
+    res.status(200).json({
+        success: true,
+        data: stats,
+        message: 'Dashboard statistics fetched successfully',
     });
 });

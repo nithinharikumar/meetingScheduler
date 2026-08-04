@@ -55,5 +55,87 @@ class MeetingRepository {
         const options = session ? { session } : {};
         return Meeting_1.MeetingModel.find(query, 'room', options).distinct('room').exec();
     }
+    async getDashboardStats(date) {
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+        // 1. Today's stats: Total meetings and total duration (in minutes)
+        const todayStatsPromise = Meeting_1.MeetingModel.aggregate([
+            {
+                $match: {
+                    status: 'CONFIRMED',
+                    startTime: { $gte: startOfDay, $lte: endOfDay },
+                },
+            },
+            {
+                $group: {
+                    _id: null,
+                    count: { $sum: 1 },
+                    totalDuration: {
+                        $sum: {
+                            $divide: [{ $subtract: ['$endTime', '$startTime'] }, 1000 * 60],
+                        },
+                    },
+                },
+            },
+        ]).exec();
+        // 2. Most used room overall
+        const mostUsedRoomPromise = Meeting_1.MeetingModel.aggregate([
+            { $match: { status: 'CONFIRMED' } },
+            {
+                $group: {
+                    _id: '$room',
+                    count: { $sum: 1 },
+                },
+            },
+            { $sort: { count: -1 } },
+            { $limit: 1 },
+            {
+                $lookup: {
+                    from: 'rooms',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'roomDetails',
+                },
+            },
+            { $unwind: { path: '$roomDetails', preserveNullAndEmptyArrays: true } },
+        ]).exec();
+        // 3. Average duration overall
+        const avgDurationPromise = Meeting_1.MeetingModel.aggregate([
+            { $match: { status: 'CONFIRMED' } },
+            {
+                $group: {
+                    _id: null,
+                    avgDuration: {
+                        $avg: {
+                            $divide: [{ $subtract: ['$endTime', '$startTime'] }, 1000 * 60],
+                        },
+                    },
+                },
+            },
+        ]).exec();
+        const [todayStats, mostUsedRoom, avgDuration] = await Promise.all([
+            todayStatsPromise,
+            mostUsedRoomPromise,
+            avgDurationPromise,
+        ]);
+        const totalMeetingsToday = todayStats[0]?.count || 0;
+        const totalDurationToday = todayStats[0]?.totalDuration || 0;
+        // Occupancy rate today:
+        // 5 rooms, each has 14 hours of work hours (8 AM to 10 PM) = 840 minutes.
+        // Total capacity = 5 * 840 = 4200 minutes.
+        const workingMinutesPerRoom = (22 - 8) * 60; // 840
+        const totalWorkingMinutes = 5 * workingMinutesPerRoom; // 4200
+        const occupancyRateToday = Math.min(Math.round((totalDurationToday / totalWorkingMinutes) * 100), 100);
+        const mostUsedRoomName = mostUsedRoom[0]?.roomDetails?.name || 'N/A';
+        const averageDuration = Math.round(avgDuration[0]?.avgDuration || 0);
+        return {
+            totalMeetingsToday,
+            occupancyRateToday,
+            mostUsedRoom: mostUsedRoomName,
+            averageDuration,
+        };
+    }
 }
 exports.MeetingRepository = MeetingRepository;

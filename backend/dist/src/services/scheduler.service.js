@@ -80,7 +80,7 @@ class SchedulerService {
                     session.endSession();
                 }
                 // Return the meeting populated with room details
-                const populated = await this.meetingRepository.findById(createdMeeting._id);
+                const populated = await this.meetingRepository.findById(createdMeeting._id.toString());
                 if (!populated) {
                     throw new Error('Failed to retrieve newly created meeting.');
                 }
@@ -114,6 +114,9 @@ class SchedulerService {
     }
     async getAllRooms() {
         return this.roomRepository.findAll();
+    }
+    async getDashboardStats(date) {
+        return this.meetingRepository.getDashboardStats(date);
     }
 }
 exports.SchedulerService = SchedulerService;

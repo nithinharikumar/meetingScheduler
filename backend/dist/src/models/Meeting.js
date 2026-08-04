@@ -33,4 +33,5 @@ const MeetingSchema = new mongoose_1.Schema({
 // Indexes for performance and query optimization
 MeetingSchema.index({ room: 1, startTime: 1, endTime: 1 });
 MeetingSchema.index({ startTime: 1, status: 1 });
+MeetingSchema.index({ status: 1, startTime: 1, endTime: 1 });
 exports.MeetingModel = (0, mongoose_1.model)('Meeting', MeetingSchema);
