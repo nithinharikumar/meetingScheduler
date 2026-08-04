@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 import { RoomModel } from '../models/Room';
+import { User } from '../models/User';
+import bcrypt from 'bcryptjs';
 import { connectDB, disconnectDB } from './db';
 
 const SEED_ROOMS = [
@@ -19,6 +21,22 @@ export const seedRooms = async (): Promise<void> => {
       console.log('✅ Successfully seeded 5 meeting rooms!');
     } else {
       console.log('ℹ️ Rooms already exist, skipping seed.');
+    }
+
+    const existingAdmin = await User.findOne({ email: 'superadmin@syncspace.com' });
+    if (!existingAdmin) {
+      console.log('🌱 Seeding default SuperAdmin...');
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash('superadmin123', salt);
+      await User.create({
+        name: 'Super Admin',
+        email: 'superadmin@syncspace.com',
+        password: hashedPassword,
+        role: 'SuperAdmin',
+      });
+      console.log('✅ Successfully seeded SuperAdmin! (superadmin@syncspace.com / superadmin123)');
+    } else {
+      console.log('ℹ️ SuperAdmin already exists, skipping seed.');
     }
   } catch (error) {
     console.error('❌ Error seeding rooms:', error);

@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSidebarStore } from '../../shared/stores/sidebarStore';
 import { useUIStore } from '../../shared/hooks/useUIStore';
+import { useAuthStore } from '../../shared/hooks/useAuthStore';
 import {
   Calendar,
   ChevronLeft,
@@ -20,6 +21,7 @@ import {
   Hexagon,
   BookOpen,
   Globe,
+  Shield,
 } from 'lucide-react';
 import { Badge, getRoomBadgeVariant } from '../../shared/ui/badge';
 import { useRooms as useRoomsHook } from '../../entities/meeting/hooks';
@@ -59,6 +61,7 @@ export const Sidebar: React.FC = () => {
   const { collapsed, toggleCollapsed, mobileMenu, setMobileMenu } = useSidebarStore();
   const { selectedDate, setSelectedDate, selectedRoomId, setSelectedRoomId, activeTab, setActiveTab } = useUIStore();
   const { data: rooms = [] } = useRoomsHook();
+  const currentUser = useAuthStore((state) => state.user);
 
   const handlePrevDay = () => {
     const d = new Date(selectedDate);
@@ -229,7 +232,7 @@ export const Sidebar: React.FC = () => {
             setActiveTab('settings');
             setMobileMenu(false);
           }}
-          title={collapsed ? 'Settings' : undefined}
+          title={collapsed ? 'Room Settings' : undefined}
           className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer ${
             activeTab === 'settings'
               ? 'bg-primary text-primary-foreground shadow-md shadow-primary/10'
@@ -237,8 +240,26 @@ export const Sidebar: React.FC = () => {
           }`}
         >
           <Settings className="w-4 h-4 shrink-0" />
-          {!collapsed && <span>Settings</span>}
+          {!collapsed && <span>Room Settings</span>}
         </button>
+
+        {(currentUser?.role === 'Admin' || currentUser?.role === 'SuperAdmin') && (
+          <button
+            onClick={() => {
+              setActiveTab('user-settings');
+              setMobileMenu(false);
+            }}
+            title={collapsed ? 'User Settings' : undefined}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer ${
+              activeTab === 'user-settings'
+                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/10'
+                : 'text-muted-foreground hover:bg-muted-foreground/10 hover:text-foreground'
+            }`}
+          >
+            <Shield className="w-4 h-4 shrink-0" />
+            {!collapsed && <span>User Settings</span>}
+          </button>
+        )}
       </div>
 
       {/* Collapse Toggle Button */}

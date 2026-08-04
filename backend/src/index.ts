@@ -6,7 +6,9 @@ import morgan from 'morgan';
 import { config } from './config';
 import { connectDB, disconnectDB } from './config/db';
 import { seedRooms } from './config/seed';
-import router from './routes/meeting.routes';
+import meetingRoutes from './routes/meeting.routes';
+import authRoutes from './routes/auth.routes';
+import userRoutes from './routes/user.routes';
 import { errorHandler, notFoundHandler } from './middlewares/error.middleware';
 
 const app = express();
@@ -27,7 +29,9 @@ app.get('/health', (req, res) => {
 });
 
 // Register API routes
-app.use('/api', router);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api', meetingRoutes);
 
 // Register 404 & Global Error handlers
 app.use(notFoundHandler);

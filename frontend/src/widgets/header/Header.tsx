@@ -3,11 +3,23 @@ import { useUIStore } from '../../shared/hooks/useUIStore';
 import { useSidebarStore } from '../../shared/stores/sidebarStore';
 import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
-import { Search, Plus, Sun, Moon, Laptop, Bell, Menu, LayoutDashboard, CalendarDays } from 'lucide-react';
+import { Search, Plus, Sun, Moon, Laptop, Bell, Menu, LayoutDashboard, CalendarDays, LogOut, User as UserIcon } from 'lucide-react';
+import { useAuthStore } from '../../shared/hooks/useAuthStore';
+import { DropdownMenu, DropdownItem } from '../../shared/ui/dropdown-menu';
 
 export const Header: React.FC = () => {
   const { theme, setTheme, searchQuery, setSearchQuery, setCreateDialogOpen, activeTab, setActiveTab } = useUIStore();
   const { toggleMobileMenu } = useSidebarStore();
+  const { user, logout } = useAuthStore();
+
+  const getInitials = (name?: string) => {
+    if (!name) return 'U';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
 
   return (
     <header className="border-b border-border bg-background/70 backdrop-blur-md sticky top-0 z-30 py-4 px-6 flex items-center justify-between gap-4 h-[73px]">
@@ -42,22 +54,20 @@ export const Header: React.FC = () => {
       <div className="flex items-center bg-muted/50 dark:bg-muted/30 border border-border/80 rounded-lg p-0.75 shadow-sm">
         <button
           onClick={() => setActiveTab('dashboard')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold cursor-pointer transition-all duration-200 ${
-            activeTab === 'dashboard'
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold cursor-pointer transition-all duration-200 ${activeTab === 'dashboard'
               ? 'bg-card text-foreground shadow-sm'
               : 'text-muted-foreground hover:text-foreground'
-          }`}
+            }`}
         >
           <LayoutDashboard className="w-3.5 h-3.5" />
           Dashboard
         </button>
         <button
           onClick={() => setActiveTab('meetings')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold cursor-pointer transition-all duration-200 ${
-            activeTab === 'meetings'
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold cursor-pointer transition-all duration-200 ${activeTab === 'meetings'
               ? 'bg-card text-foreground shadow-sm'
               : 'text-muted-foreground hover:text-foreground'
-          }`}
+            }`}
         >
           <CalendarDays className="w-3.5 h-3.5" />
           Meetings
@@ -84,27 +94,24 @@ export const Header: React.FC = () => {
         <div className="flex items-center bg-muted/65 dark:bg-muted/30 rounded-lg p-0.75 border border-border/80">
           <button
             onClick={() => setTheme('light')}
-            className={`p-1 rounded-md transition-all cursor-pointer ${
-              theme === 'light' ? 'bg-card text-primary shadow-xs' : 'text-muted-foreground hover:text-foreground'
-            }`}
+            className={`p-1 rounded-md transition-all cursor-pointer ${theme === 'light' ? 'bg-card text-primary shadow-xs' : 'text-muted-foreground hover:text-foreground'
+              }`}
             title="Light Theme"
           >
             <Sun className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => setTheme('dark')}
-            className={`p-1 rounded-md transition-all cursor-pointer ${
-              theme === 'dark' ? 'bg-card text-primary shadow-xs' : 'text-muted-foreground hover:text-foreground'
-            }`}
+            className={`p-1 rounded-md transition-all cursor-pointer ${theme === 'dark' ? 'bg-card text-primary shadow-xs' : 'text-muted-foreground hover:text-foreground'
+              }`}
             title="Dark Theme"
           >
             <Moon className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => setTheme('system')}
-            className={`p-1 rounded-md transition-all cursor-pointer ${
-              theme === 'system' ? 'bg-card text-primary shadow-xs' : 'text-muted-foreground hover:text-foreground'
-            }`}
+            className={`p-1 rounded-md transition-all cursor-pointer ${theme === 'system' ? 'bg-card text-primary shadow-xs' : 'text-muted-foreground hover:text-foreground'
+              }`}
             title="System Theme"
           >
             <Laptop className="w-3.5 h-3.5" />
@@ -112,23 +119,36 @@ export const Header: React.FC = () => {
         </div>
 
         {/* Notification Bell */}
-        <button
+        {/* <button
           className="relative p-1.5 rounded-lg border border-border/80 bg-card hover:bg-muted hover:text-foreground text-muted-foreground cursor-pointer transition-colors"
           title="Notifications"
-        >
-          <Bell className="w-4 h-4" />
+        > */}
+        {/* <Bell className="w-4 h-4" />
           <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-destructive animate-pulse"></span>
-        </button>
+        </button> */}
 
         {/* User Profile Avatar */}
-        <div
-          className="w-8.5 h-8.5 rounded-full bg-gradient-to-tr from-primary to-accent p-[1px] cursor-pointer shadow-sm shadow-primary/10 shrink-0"
-          title="User Profile"
+        <DropdownMenu
+          align="right"
+          trigger={
+            <div
+              className="w-8.5 h-8.5 rounded-full bg-gradient-to-tr from-primary to-accent p-[1px] cursor-pointer shadow-sm shadow-primary/10 shrink-0"
+              title="User Profile"
+            >
+              <div className="w-full h-full rounded-full bg-card flex items-center justify-center text-xs font-bold text-foreground">
+                {getInitials(user?.name)}
+              </div>
+            </div>
+          }
         >
-          <div className="w-full h-full rounded-full bg-card flex items-center justify-center text-xs font-bold text-foreground">
-            NH
+          <div className="px-3 py-2 border-b border-border/60 mb-1">
+            <p className="text-sm font-semibold text-foreground truncate">{user?.name || 'User'}</p>
+            <p className="text-xs text-muted-foreground truncate">{user?.email || ''}</p>
           </div>
-        </div>
+          <DropdownItem onClick={() => logout()} variant="destructive">
+            <LogOut className="w-4 h-4" /> Logout
+          </DropdownItem>
+        </DropdownMenu>
 
         {/* Book Meeting Button */}
         <Button

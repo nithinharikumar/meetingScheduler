@@ -30,6 +30,7 @@ export const MeetingTable: React.FC = () => {
   const [sortField, setSortField] = useState<'title' | 'room' | 'time'>('time');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'cancelled'>('upcoming');
   const [activeMeeting, setActiveMeeting] = useState<Meeting | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isCancelOpen, setIsCancelOpen] = useState(false);
@@ -50,16 +51,18 @@ export const MeetingTable: React.FC = () => {
 
   // Filter and sort meetings list
   const processedMeetings = useMemo(() => {
-    const activeConfirmed = meetings.filter((m) => m.status === 'CONFIRMED');
+    const statusFiltered = meetings.filter((m) => 
+      activeTab === 'upcoming' ? m.status === 'CONFIRMED' : m.status === 'CANCELLED'
+    );
     
     // Search filter
-    const filtered = activeConfirmed.filter((m) =>
+    const filtered = statusFiltered.filter((m) =>
       m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       m.room.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     // Sorting
-    return filtered.sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       let comparison = 0;
       if (sortField === 'title') {
         comparison = a.title.localeCompare(b.title);
@@ -70,7 +73,7 @@ export const MeetingTable: React.FC = () => {
       }
       return sortOrder === 'asc' ? comparison : -comparison;
     });
-  }, [meetings, searchQuery, sortField, sortOrder]);
+  }, [meetings, searchQuery, sortField, sortOrder, activeTab]);
 
   // Paginate list
   const totalPages = Math.ceil(processedMeetings.length / itemsPerPage);
@@ -82,16 +85,6 @@ export const MeetingTable: React.FC = () => {
   const handleCancelClick = (meeting: Meeting) => {
     setActiveMeeting(meeting);
     setIsCancelOpen(true);
-  };
-
-  const handleViewClick = (meeting: Meeting) => {
-    setActiveMeeting(meeting);
-    setIsDetailsOpen(true);
-  };
-
-  const handleEditClick = (meeting: Meeting) => {
-    setEditTarget(meeting);
-    setIsEditOpen(true);
   };
 
   const handleConfirmCancel = async () => {
@@ -108,8 +101,31 @@ export const MeetingTable: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      {/* Table Wrapper */}
-      <Card className={cn('border', 'border-border', 'bg-card', 'overflow-hidden', 'shadow-sm')}>
+      <Card className="border border-border shadow-sm bg-card overflow-hidden">
+        {/* Table Header and Controls */}
+        <div className="p-4 border-b border-border bg-background-secondary/30 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div className="flex bg-muted-foreground/10 p-1 rounded-md">
+            <button
+              onClick={() => { setActiveTab('upcoming'); setCurrentPage(1); }}
+              className={cn(
+                "px-4 py-1.5 text-xs font-semibold rounded-sm transition-colors",
+                activeTab === 'upcoming' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Upcoming
+            </button>
+            <button
+              onClick={() => { setActiveTab('cancelled'); setCurrentPage(1); }}
+              className={cn(
+                "px-4 py-1.5 text-xs font-semibold rounded-sm transition-colors",
+                activeTab === 'cancelled' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Cancelled
+            </button>
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
           <table className={cn('w-full', 'text-left', 'border-collapse')}>
             <thead>
@@ -201,35 +217,34 @@ export const MeetingTable: React.FC = () => {
                         </span>
                       </td>
                       <td className={cn('py-8', 'px-4')}>
-                        <Badge variant="success" className={cn('px-2', 'py-0.5', 'border-0', 'uppercase', 'text-[9px]', 'tracking-wider', 'font-bold')}>
-                          Confirmed
+                        <Badge variant={activeTab === 'upcoming' ? "success" : "destructive"} className={cn('px-2', 'py-0.5', 'border-0', 'uppercase', 'text-[9px]', 'tracking-wider', 'font-bold')}>
+                          {activeTab === 'upcoming' ? 'Confirmed' : 'Cancelled'}
                         </Badge>
                       </td>
-                      <td className={cn('py-8', 'px-4', 'text-right')}>
-                        <DropdownMenu
-                          trigger={
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className={cn('h-7', 'w-7', 'rounded-md', 'cursor-pointer', 'hover:bg-muted-foreground/10', 'text-muted-foreground')}
-                            >
-                              <MoreHorizontal className={cn('w-4', 'h-4')} />
-                            </Button>
-                          }
-                        >
-                          <DropdownItem onClick={() => handleViewClick(meeting)}>
-                            <Eye className={cn('w-3.5', 'h-3.5', 'text-muted-foreground')} /> View Details
-                          </DropdownItem>
-                          <DropdownItem onClick={() => handleEditClick(meeting)}>
-                            <Pencil className={cn('w-3.5', 'h-3.5', 'text-muted-foreground')} /> Edit Meeting
-                          </DropdownItem>
-                          <DropdownItem 
-                            variant="destructive" 
-                            onClick={() => handleCancelClick(meeting)}
+                      <td className="py-4 px-6 text-right">
+                        {activeTab === 'upcoming' && (
+                          <DropdownMenu
+                            trigger={
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 rounded-md hover:bg-muted-foreground/10 text-muted-foreground"
+                              >
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            }
                           >
-                            <Trash2 className={cn('w-3.5', 'h-3.5')} /> Cancel Reservation
-                          </DropdownItem>
-                        </DropdownMenu>
+                            <DropdownItem onClick={() => { setActiveMeeting(meeting); setIsDetailsOpen(true); }}>
+                              <Eye className="w-4 h-4 mr-2" /> View Details
+                            </DropdownItem>
+                            <DropdownItem onClick={() => { setEditTarget(meeting); setIsEditOpen(true); }}>
+                              <Pencil className="w-4 h-4 mr-2" /> Edit Meeting
+                            </DropdownItem>
+                            <DropdownItem variant="destructive" onClick={() => handleCancelClick(meeting)}>
+                              <Trash2 className="w-4 h-4 mr-2" /> Cancel Meeting
+                            </DropdownItem>
+                          </DropdownMenu>
+                        )}
                       </td>
                     </tr>
                   );

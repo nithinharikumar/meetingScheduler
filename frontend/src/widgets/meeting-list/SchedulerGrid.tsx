@@ -17,8 +17,6 @@ import {
 import { TimelineSkeleton } from '../../shared/ui/skeleton';
 import { getRoomBadgeVariant } from '../../shared/ui/badge';
 
-const START_HOUR = 8; // 8:00 AM
-const END_HOUR = 22; // 10:00 PM
 const HOUR_HEIGHT = 72; // height in pixels of 1 hour block
 
 export const SchedulerGrid: React.FC = () => {
@@ -27,6 +25,8 @@ export const SchedulerGrid: React.FC = () => {
   const setSearchQuery = useUIStore((state) => state.setSearchQuery);
   const selectedRoomId = useUIStore((state) => state.selectedRoomId);
   const setCreateDialogOpen = useUIStore((state) => state.setCreateDialogOpen);
+  const businessStartHour = useUIStore((state) => state.businessStartHour);
+  const businessEndHour = useUIStore((state) => state.businessEndHour);
 
   const { data: rooms = [], isLoading: roomsLoading } = useRooms();
   const { data: meetings = [], isLoading: meetingsLoading } = useMeetings({ date: selectedDate });
@@ -35,14 +35,7 @@ export const SchedulerGrid: React.FC = () => {
   const [activeMeeting, setActiveMeeting] = useState<Meeting | null>(null);
   const [isConfirmCancelOpen, setIsConfirmCancelOpen] = useState(false);
 
-  // Generate hours array
-  const hours = useMemo(() => {
-    const list = [];
-    for (let h = START_HOUR; h < END_HOUR; h++) {
-      list.push(h);
-    }
-    return list;
-  }, []);
+
 
   // Filter meetings based on search query and room filter
   const filteredMeetings = useMemo(() => {
@@ -53,6 +46,30 @@ export const SchedulerGrid: React.FC = () => {
       return matchesSearch && matchesRoom && isConfirmed;
     });
   }, [meetings, searchQuery, selectedRoomId]);
+
+  // Dynamically calculate start and end hours based on meetings
+  const { displayStartHour, displayEndHour } = useMemo(() => {
+    let minHour = businessStartHour;
+    let maxHour = businessEndHour;
+    
+    filteredMeetings.forEach(m => {
+      const startH = new Date(m.startTime).getHours();
+      const endH = new Date(m.endTime).getHours();
+      if (startH < minHour) minHour = startH;
+      if (endH > maxHour) maxHour = endH;
+    });
+    
+    return { displayStartHour: minHour, displayEndHour: maxHour };
+  }, [filteredMeetings, businessStartHour, businessEndHour]);
+
+  // Generate hours array
+  const hours = useMemo(() => {
+    const list = [];
+    for (let h = displayStartHour; h <= displayEndHour; h++) {
+      list.push(h);
+    }
+    return list;
+  }, [displayStartHour, displayEndHour]);
 
   // Map meetings to their respective rooms
   const meetingsByRoom = useMemo(() => {
@@ -96,7 +113,7 @@ export const SchedulerGrid: React.FC = () => {
     const endH = end.getHours();
     const endM = end.getMinutes();
 
-    const dayStartMin = START_HOUR * 60;
+    const dayStartMin = displayStartHour * 60;
     const startMin = startH * 60 + startM;
     const endMin = endH * 60 + endM;
 

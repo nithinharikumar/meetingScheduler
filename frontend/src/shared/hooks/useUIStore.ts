@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 type Theme = 'light' | 'dark' | 'system';
+type ActiveTab = 'dashboard' | 'meetings' | 'settings' | 'user-settings';
 
 export interface UIState {
   theme: Theme;
@@ -8,14 +9,17 @@ export interface UIState {
   searchQuery: string;
   isCreateDialogOpen: boolean;
   selectedRoomId: string | null;
-  activeTab: 'dashboard' | 'meetings' | 'settings';
+  activeTab: ActiveTab;
+  businessStartHour: number;
+  businessEndHour: number;
   
   setTheme: (theme: Theme) => void;
   setSelectedDate: (date: string) => void;
   setSearchQuery: (query: string) => void;
   setCreateDialogOpen: (open: boolean) => void;
   setSelectedRoomId: (roomId: string | null) => void;
-  setActiveTab: (tab: 'dashboard' | 'meetings' | 'settings') => void;
+  setActiveTab: (tab: ActiveTab) => void;
+  setBusinessHours: (start: number, end: number) => void;
 }
 
 const getInitialTheme = (): Theme => {
@@ -31,6 +35,16 @@ const getTodayString = (): string => {
   return `${year}-${month}-${day}`;
 };
 
+const getInitialBusinessStartHour = (): number => {
+  const saved = localStorage.getItem('businessStartHour');
+  return saved ? parseInt(saved, 10) : 8;
+};
+
+const getInitialBusinessEndHour = (): number => {
+  const saved = localStorage.getItem('businessEndHour');
+  return saved ? parseInt(saved, 10) : 21;
+};
+
 export const useUIStore = create<UIState>((set) => ({
   theme: getInitialTheme(),
   selectedDate: getTodayString(),
@@ -38,6 +52,8 @@ export const useUIStore = create<UIState>((set) => ({
   isCreateDialogOpen: false,
   selectedRoomId: null,
   activeTab: 'dashboard',
+  businessStartHour: getInitialBusinessStartHour(),
+  businessEndHour: getInitialBusinessEndHour(),
 
   setTheme: (theme) => {
     localStorage.setItem('theme', theme);
@@ -59,4 +75,9 @@ export const useUIStore = create<UIState>((set) => ({
   setCreateDialogOpen: (isCreateDialogOpen) => set({ isCreateDialogOpen }),
   setSelectedRoomId: (selectedRoomId) => set({ selectedRoomId }),
   setActiveTab: (activeTab) => set({ activeTab }),
+  setBusinessHours: (start, end) => {
+    localStorage.setItem('businessStartHour', start.toString());
+    localStorage.setItem('businessEndHour', end.toString());
+    set({ businessStartHour: start, businessEndHour: end });
+  },
 }));

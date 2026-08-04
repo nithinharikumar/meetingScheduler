@@ -9,10 +9,13 @@ import { MeetingTable } from '../widgets/meeting-table/MeetingTable';
 import { RecentActivity } from '../widgets/recent-activity/RecentActivity';
 import { RoomSettingsPanel } from '../widgets/room-settings/RoomSettingsPanel';
 import { CreateMeetingForm } from '../features/create-meeting/CreateMeetingForm';
+import { AuthModal } from '../features/auth/AuthModal';
+import { UserManagementPanel } from '../widgets/user-settings/UserManagementPanel';
 import { useUIStore } from '../shared/hooks/useUIStore';
+import { useAuthStore } from '../shared/hooks/useAuthStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../shared/ui/dialog';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../shared/ui/card';
-import { CalendarDays, LayoutDashboard, Settings } from 'lucide-react';
+import { CalendarDays, LayoutDashboard, Settings, Shield } from 'lucide-react';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,6 +28,7 @@ const queryClient = new QueryClient({
 
 export const App: React.FC = () => {
   const { theme, isCreateDialogOpen, setCreateDialogOpen, selectedDate, activeTab } = useUIStore();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   // Initialize theme on mount and when changed
   useEffect(() => {
@@ -63,6 +67,8 @@ export const App: React.FC = () => {
                     <LayoutDashboard className="w-5 h-5 text-primary" />
                   ) : activeTab === 'meetings' ? (
                     <CalendarDays className="w-5 h-5 text-primary" />
+                  ) : activeTab === 'user-settings' ? (
+                    <Shield className="w-5 h-5 text-primary" />
                   ) : (
                     <Settings className="w-5 h-5 text-primary" />
                   )}
@@ -70,6 +76,8 @@ export const App: React.FC = () => {
                     ? 'Timeline Scheduler'
                     : activeTab === 'meetings'
                     ? 'Meetings Registry'
+                    : activeTab === 'user-settings'
+                    ? 'User Management'
                     : 'Room Settings'}
                 </h2>
                 <p className="text-xs text-muted-foreground">
@@ -77,10 +85,12 @@ export const App: React.FC = () => {
                     ? 'Assign meetings to rooms dynamically and monitor real-time schedules.'
                     : activeTab === 'meetings'
                     ? 'Search, filter, and organize all room bookings.'
+                    : activeTab === 'user-settings'
+                    ? 'Manage roles and permissions for all users.'
                     : 'Manage your meeting rooms — create, edit, and delete rooms.'}
                 </p>
               </div>
-              {activeTab !== 'settings' && (
+              {activeTab !== 'settings' && activeTab !== 'user-settings' && (
                 <div className="flex items-center gap-2 text-[10px] font-semibold text-muted-foreground bg-background-secondary border border-border/80 px-3 py-1.5 rounded-lg w-fit">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block"></span>
                   Sync active
@@ -89,11 +99,13 @@ export const App: React.FC = () => {
             </div>
 
             {/* Statistics Row — hidden on settings tab */}
-            {activeTab !== 'settings' && <StatsCards selectedDate={selectedDate} />}
+            {activeTab !== 'settings' && activeTab !== 'user-settings' && <StatsCards selectedDate={selectedDate} />}
 
             {/* Tab Panels */}
             {activeTab === 'settings' ? (
               <RoomSettingsPanel />
+            ) : activeTab === 'user-settings' ? (
+              <UserManagementPanel />
             ) : activeTab === 'dashboard' ? (
               // Dashboard View
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -167,6 +179,9 @@ export const App: React.FC = () => {
             <CreateMeetingForm onSuccess={() => setCreateDialogOpen(false)} />
           </DialogContent>
         </Dialog>
+
+        {/* Global Auth Modal */}
+        {!isAuthenticated && <AuthModal />}
       </div>
     </QueryClientProvider>
   );
