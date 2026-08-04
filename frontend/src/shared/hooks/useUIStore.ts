@@ -8,14 +8,14 @@ export interface UIState {
   searchQuery: string;
   isCreateDialogOpen: boolean;
   selectedRoomId: string | null;
-  activeTab: 'dashboard' | 'meetings';
+  activeTab: 'dashboard' | 'meetings' | 'settings';
   
   setTheme: (theme: Theme) => void;
   setSelectedDate: (date: string) => void;
   setSearchQuery: (query: string) => void;
   setCreateDialogOpen: (open: boolean) => void;
   setSelectedRoomId: (roomId: string | null) => void;
-  setActiveTab: (tab: 'dashboard' | 'meetings') => void;
+  setActiveTab: (tab: 'dashboard' | 'meetings' | 'settings') => void;
 }
 
 const getInitialTheme = (): Theme => {

@@ -15,7 +15,7 @@ const app = express();
 app.use(helmet());
 app.use(cors({
   origin: '*', // For demo purposes; configure production domains as needed
-  methods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 }));
 app.use(compression());
 app.use(express.json());

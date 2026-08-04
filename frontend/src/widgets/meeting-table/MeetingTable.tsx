@@ -15,7 +15,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from '../../shared/ui/dialog';
-import { MoreHorizontal, Trash2, ArrowUpDown, Clock, Building, Calendar, Users, Eye, AlertTriangle } from 'lucide-react';
+import { EditMeetingForm } from '../../features/edit-meeting/EditMeetingForm';
+import { MoreHorizontal, Trash2, ArrowUpDown, Clock, Building, Pencil, Users, Eye, AlertTriangle } from 'lucide-react';
 
 export const MeetingTable: React.FC = () => {
   const selectedDate = useUIStore((state) => state.selectedDate);
@@ -31,6 +32,8 @@ export const MeetingTable: React.FC = () => {
   const [activeMeeting, setActiveMeeting] = useState<Meeting | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isCancelOpen, setIsCancelOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<Meeting | null>(null);
 
   const itemsPerPage = 6;
 
@@ -83,6 +86,11 @@ export const MeetingTable: React.FC = () => {
   const handleViewClick = (meeting: Meeting) => {
     setActiveMeeting(meeting);
     setIsDetailsOpen(true);
+  };
+
+  const handleEditClick = (meeting: Meeting) => {
+    setEditTarget(meeting);
+    setIsEditOpen(true);
   };
 
   const handleConfirmCancel = async () => {
@@ -210,6 +218,9 @@ export const MeetingTable: React.FC = () => {
                         >
                           <DropdownItem onClick={() => handleViewClick(meeting)}>
                             <Eye className="w-3.5 h-3.5 text-muted-foreground" /> View Details
+                          </DropdownItem>
+                          <DropdownItem onClick={() => handleEditClick(meeting)}>
+                            <Pencil className="w-3.5 h-3.5 text-muted-foreground" /> Edit Meeting
                           </DropdownItem>
                           <DropdownItem 
                             variant="destructive" 
@@ -350,6 +361,27 @@ export const MeetingTable: React.FC = () => {
               Go Back
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Meeting Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={(open) => { if (!open) { setIsEditOpen(false); setEditTarget(null); } }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 font-bold text-primary">
+              <Pencil className="w-5 h-5" /> Edit Meeting
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Update the meeting details below. Changes take effect immediately.
+            </DialogDescription>
+          </DialogHeader>
+          {editTarget && (
+            <EditMeetingForm
+              meeting={editTarget}
+              onSuccess={() => { setIsEditOpen(false); setEditTarget(null); }}
+              onCancel={() => { setIsEditOpen(false); setEditTarget(null); }}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

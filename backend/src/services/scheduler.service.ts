@@ -151,8 +151,75 @@ export class SchedulerService {
     return this.meetingRepository.findById(id);
   }
 
+  async updateMeeting(
+    id: string,
+    data: { title?: string; startTime?: Date; endTime?: Date; roomId?: string }
+  ): Promise<IMeetingDocument> {
+    const meeting = await this.meetingRepository.findById(id);
+    if (!meeting) throw new Error('Meeting not found.');
+    if (meeting.status === 'CANCELLED') throw new Error('Cannot edit a cancelled meeting.');
+
+    const startTime = data.startTime ?? new Date((meeting as any).startTime);
+    const endTime = data.endTime ?? new Date((meeting as any).endTime);
+
+    if (startTime >= endTime) {
+      throw new Error('Start time must be before end time.');
+    }
+
+    // Check for overlaps if time or room changes
+    const roomId = data.roomId ?? (meeting as any).room?._id?.toString() ?? (meeting as any).room?.toString();
+    const overlapping = await this.meetingRepository.findOverlapping(roomId, startTime, endTime);
+    if (overlapping && overlapping._id.toString() !== id) {
+      throw new Error('The selected room is occupied during the requested timeframe.');
+    }
+
+    const updatePayload: any = {};
+    if (data.title) updatePayload.title = data.title;
+    if (data.startTime) updatePayload.startTime = data.startTime;
+    if (data.endTime) updatePayload.endTime = data.endTime;
+    if (data.roomId) updatePayload.room = data.roomId;
+
+    const updated = await this.meetingRepository.update(id, updatePayload);
+    if (!updated) throw new Error('Failed to update meeting.');
+    return updated;
+  }
+
   async getAllRooms() {
     return this.roomRepository.findAll();
+  }
+
+  async createRoom(name: string, capacity: number, description?: string) {
+    const existing = await this.roomRepository.findByName(name);
+    if (existing) throw new Error(`A room named "${name}" already exists.`);
+    return this.roomRepository.create({ name, capacity: capacity ?? 10, description });
+  }
+
+  async updateRoom(id: string, data: { name?: string; capacity?: number; description?: string }) {
+    const room = await this.roomRepository.findById(id);
+    if (!room) throw new Error('Room not found.');
+    if (data.name && data.name !== room.name) {
+      const existing = await this.roomRepository.findByName(data.name);
+      if (existing) throw new Error(`A room named "${data.name}" already exists.`);
+    }
+    const updated = await this.roomRepository.update(id, data);
+    if (!updated) throw new Error('Failed to update room.');
+    return updated;
+  }
+
+  async deleteRoom(id: string) {
+    const room = await this.roomRepository.findById(id);
+    if (!room) throw new Error('Room not found.');
+
+    // Guard: cannot delete if active confirmed meetings exist for this room
+    const { MeetingModel } = await import('../models/Meeting');
+    const activeMeetings = await MeetingModel.countDocuments({ room: id, status: 'CONFIRMED' });
+    if (activeMeetings > 0) {
+      throw new Error(`Cannot delete room: it has ${activeMeetings} active confirmed meeting(s). Cancel them first.`);
+    }
+
+    const deleted = await this.roomRepository.delete(id);
+    if (!deleted) throw new Error('Failed to delete room.');
+    return deleted;
   }
 
   async getDashboardStats(date: Date) {
@@ -160,3 +227,4 @@ export class SchedulerService {
   }
 }
 export const schedulerService = new SchedulerService();
+

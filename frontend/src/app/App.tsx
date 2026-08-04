@@ -7,11 +7,12 @@ import { SchedulerGrid } from '../widgets/meeting-list/SchedulerGrid';
 import { StatsCards } from '../widgets/stats-cards/StatsCards';
 import { MeetingTable } from '../widgets/meeting-table/MeetingTable';
 import { RecentActivity } from '../widgets/recent-activity/RecentActivity';
+import { RoomSettingsPanel } from '../widgets/room-settings/RoomSettingsPanel';
 import { CreateMeetingForm } from '../features/create-meeting/CreateMeetingForm';
 import { useUIStore } from '../shared/hooks/useUIStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../shared/ui/dialog';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../shared/ui/card';
-import { CalendarDays, LayoutDashboard } from 'lucide-react';
+import { CalendarDays, LayoutDashboard, Settings } from 'lucide-react';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,7 +41,7 @@ export const App: React.FC = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-200">
+      <div className="h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-200 overflow-hidden">
         {/* Global Toast Notifier */}
         <Toaster richColors position="bottom-right" />
 
@@ -60,28 +61,40 @@ export const App: React.FC = () => {
                 <h2 className="text-xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
                   {activeTab === 'dashboard' ? (
                     <LayoutDashboard className="w-5 h-5 text-primary" />
-                  ) : (
+                  ) : activeTab === 'meetings' ? (
                     <CalendarDays className="w-5 h-5 text-primary" />
+                  ) : (
+                    <Settings className="w-5 h-5 text-primary" />
                   )}
-                  {activeTab === 'dashboard' ? 'Timeline Scheduler' : 'Meetings Registry'}
+                  {activeTab === 'dashboard'
+                    ? 'Timeline Scheduler'
+                    : activeTab === 'meetings'
+                    ? 'Meetings Registry'
+                    : 'Room Settings'}
                 </h2>
                 <p className="text-xs text-muted-foreground">
                   {activeTab === 'dashboard'
                     ? 'Assign meetings to rooms dynamically and monitor real-time schedules.'
-                    : 'Search, filter, and organize all room bookings.'}
+                    : activeTab === 'meetings'
+                    ? 'Search, filter, and organize all room bookings.'
+                    : 'Manage your meeting rooms — create, edit, and delete rooms.'}
                 </p>
               </div>
-              <div className="flex items-center gap-2 text-[10px] font-semibold text-muted-foreground bg-background-secondary border border-border/80 px-3 py-1.5 rounded-lg w-fit">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block"></span>
-                Sync active
-              </div>
+              {activeTab !== 'settings' && (
+                <div className="flex items-center gap-2 text-[10px] font-semibold text-muted-foreground bg-background-secondary border border-border/80 px-3 py-1.5 rounded-lg w-fit">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block"></span>
+                  Sync active
+                </div>
+              )}
             </div>
 
-            {/* Statistics Row */}
-            <StatsCards selectedDate={selectedDate} />
+            {/* Statistics Row — hidden on settings tab */}
+            {activeTab !== 'settings' && <StatsCards selectedDate={selectedDate} />}
 
             {/* Tab Panels */}
-            {activeTab === 'dashboard' ? (
+            {activeTab === 'settings' ? (
+              <RoomSettingsPanel />
+            ) : activeTab === 'dashboard' ? (
               // Dashboard View
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Timeline Grid (Col Span 2) */}
@@ -122,7 +135,7 @@ export const App: React.FC = () => {
 
                 {/* Side Quick Booking Panel (Col Span 1) */}
                 <div className="lg:col-span-1">
-                  <Card className="border border-border bg-card shadow-sm sticky top-[95px]">
+                  <Card className="border border-border bg-card shadow-sm sticky top-[95px] max-h-[calc(100vh-120px)] overflow-y-auto">
                     <CardHeader className="p-5 pb-3">
                       <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                         Book a Room

@@ -2,15 +2,15 @@ import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useBookMeeting, useRooms } from '../../entities/meeting/hooks';
-import { useUIStore } from '../../shared/hooks/useUIStore';
+import { useUpdateMeeting, useRooms } from '../../entities/meeting/hooks';
+import type { Meeting } from '../../entities/meeting/types';
 import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/form/Input';
 import { Select } from '../../shared/ui/form/Select';
 
 const timeRegex = /^([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/;
 
-const formSchema = z
+const editMeetingSchema = z
   .object({
     title: z
       .string()
@@ -21,18 +21,8 @@ const formSchema = z
     startTime: z.string().regex(timeRegex, 'Must be in HH:MM format'),
     endDate: z.string().min(1, 'End date is required'),
     endTime: z.string().regex(timeRegex, 'Must be in HH:MM format'),
-    roomId: z.string().optional(),
+    roomId: z.string().min(1, 'Room is required'),
   })
-  .refine(
-    (data) => {
-      const startDateTime = new Date(`${data.startDate}T${data.startTime}:00`);
-      return startDateTime.getTime() > Date.now();
-    },
-    {
-      message: 'Start date/time cannot be in the past',
-      path: ['startTime'],
-    }
-  )
   .refine(
     (data) => {
       const startDateTime = new Date(`${data.startDate}T${data.startTime}:00`);
@@ -45,65 +35,32 @@ const formSchema = z
     }
   );
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof editMeetingSchema>;
 
-const getDefaultTimes = (selectedDateStr: string) => {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const day = String(today.getDate()).padStart(2, '0');
-  const todayStr = `${year}-${month}-${day}`;
-
-  if (selectedDateStr === todayStr) {
-    const now = new Date();
-    const currentHour = now.getHours();
-
-    const startHour = (currentHour + 1) % 24;
-    const endHour = (currentHour + 2) % 24;
-
-    const startStr = `${String(startHour).padStart(2, '0')}:00`;
-    const endStr = `${String(endHour).padStart(2, '0')}:00`;
-
-    let startDate = selectedDateStr;
-    let endDate = selectedDateStr;
-
-    if (currentHour === 23) {
-      const tomorrow = new Date(now);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const tYear = tomorrow.getFullYear();
-      const tMonth = String(tomorrow.getMonth() + 1).padStart(2, '0');
-      const tDay = String(tomorrow.getDate()).padStart(2, '0');
-      const tomorrowStr = `${tYear}-${tMonth}-${tDay}`;
-      startDate = tomorrowStr;
-      endDate = tomorrowStr;
-    }
-
-    return {
-      startDate,
-      startTime: startStr,
-      endDate,
-      endTime: endStr,
-    };
-  }
-
-  return {
-    startDate: selectedDateStr,
-    startTime: '09:00',
-    endDate: selectedDateStr,
-    endTime: '10:00',
-  };
+const toDateStr = (iso: string) => {
+  const d = new Date(iso);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
-interface CreateMeetingFormProps {
+const toTimeStr = (iso: string) => {
+  const d = new Date(iso);
+  const h = String(d.getHours()).padStart(2, '0');
+  const m = String(d.getMinutes()).padStart(2, '0');
+  return `${h}:${m}`;
+};
+
+interface EditMeetingFormProps {
+  meeting: Meeting;
   onSuccess: () => void;
+  onCancel: () => void;
 }
 
-export const CreateMeetingForm: React.FC<CreateMeetingFormProps> = ({ onSuccess }) => {
-  const selectedDate = useUIStore((state) => state.selectedDate);
-  const { mutateAsync: bookMeeting, isPending } = useBookMeeting({ date: selectedDate });
+export const EditMeetingForm: React.FC<EditMeetingFormProps> = ({ meeting, onSuccess, onCancel }) => {
+  const { mutateAsync: updateMeeting, isPending } = useUpdateMeeting();
   const { data: rooms = [] } = useRooms();
-
-  const defaultTimes = getDefaultTimes(selectedDate);
 
   const {
     register,
@@ -111,69 +68,70 @@ export const CreateMeetingForm: React.FC<CreateMeetingFormProps> = ({ onSuccess 
     formState: { errors },
     reset,
   } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(editMeetingSchema),
     defaultValues: {
-      title: '',
-      startDate: defaultTimes.startDate,
-      startTime: defaultTimes.startTime,
-      endDate: defaultTimes.endDate,
-      endTime: defaultTimes.endTime,
-      roomId: '',
+      title: meeting.title,
+      startDate: toDateStr(meeting.startTime),
+      startTime: toTimeStr(meeting.startTime),
+      endDate: toDateStr(meeting.endTime),
+      endTime: toTimeStr(meeting.endTime),
+      roomId: meeting.room._id,
     },
   });
 
-  // Reset form default values when active calendar date changes
+  // Re-sync defaults if the meeting prop changes (e.g. user switches which meeting to edit)
   useEffect(() => {
-    const currentDefaults = getDefaultTimes(selectedDate);
     reset({
-      title: '',
-      startDate: currentDefaults.startDate,
-      startTime: currentDefaults.startTime,
-      endDate: currentDefaults.endDate,
-      endTime: currentDefaults.endTime,
-      roomId: '',
+      title: meeting.title,
+      startDate: toDateStr(meeting.startTime),
+      startTime: toTimeStr(meeting.startTime),
+      endDate: toDateStr(meeting.endTime),
+      endTime: toTimeStr(meeting.endTime),
+      roomId: meeting.room._id,
     });
-  }, [selectedDate, reset]);
+  }, [meeting._id, reset]);
 
   const onSubmit = async (values: FormValues) => {
     try {
       const startISO = new Date(`${values.startDate}T${values.startTime}:00`).toISOString();
       const endISO = new Date(`${values.endDate}T${values.endTime}:00`).toISOString();
 
-      await bookMeeting({
-        title: values.title,
-        startTime: startISO,
-        endTime: endISO,
-        roomId: values.roomId || undefined,
+      await updateMeeting({
+        id: meeting._id,
+        dto: {
+          title: values.title,
+          startTime: startISO,
+          endTime: endISO,
+          roomId: values.roomId,
+        },
       });
 
-      reset();
       onSuccess();
-    } catch (err) {
+    } catch {
       // Error already toasted by mutation hook
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
-      {/* Meeting Title Input */}
+      {/* Meeting Title */}
       <Input
         label="Meeting Title"
-        id="title"
+        id="edit-title"
         placeholder="e.g. Sprint Planning"
         error={errors.title}
         required
         {...register('title')}
       />
 
-      {/* Room Selection Dropdown */}
+      {/* Room Selection */}
       <Select
         label="Meeting Room"
-        id="roomId"
+        id="edit-roomId"
         error={errors.roomId}
         {...register('roomId')}
       >
-        <option value="">Auto-allocate (First Available)</option>
+        <option value="">Select a room...</option>
         {rooms.map((room) => (
           <option key={room._id} value={room._id}>
             {room.name} (Capacity: {room.capacity})
@@ -185,7 +143,7 @@ export const CreateMeetingForm: React.FC<CreateMeetingFormProps> = ({ onSuccess 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input
           label="Start Date"
-          id="startDate"
+          id="edit-startDate"
           type="date"
           required
           error={errors.startDate}
@@ -193,7 +151,7 @@ export const CreateMeetingForm: React.FC<CreateMeetingFormProps> = ({ onSuccess 
         />
         <Input
           label="Start Time"
-          id="startTime"
+          id="edit-startTime"
           type="time"
           required
           error={errors.startTime}
@@ -205,7 +163,7 @@ export const CreateMeetingForm: React.FC<CreateMeetingFormProps> = ({ onSuccess 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input
           label="End Date"
-          id="endDate"
+          id="edit-endDate"
           type="date"
           required
           error={errors.endDate}
@@ -213,7 +171,7 @@ export const CreateMeetingForm: React.FC<CreateMeetingFormProps> = ({ onSuccess 
         />
         <Input
           label="End Time"
-          id="endTime"
+          id="edit-endTime"
           type="time"
           required
           error={errors.endTime}
@@ -221,14 +179,22 @@ export const CreateMeetingForm: React.FC<CreateMeetingFormProps> = ({ onSuccess 
         />
       </div>
 
-      {/* Submission Actions */}
+      {/* Actions */}
       <div className="flex justify-end gap-2.5 pt-4 border-t border-border mt-6">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          className="h-9 px-4 text-xs font-semibold"
+        >
+          Cancel
+        </Button>
         <Button
           type="submit"
           loading={isPending}
-          className="w-full sm:w-auto font-semibold px-5"
+          className="h-9 px-5 text-xs font-semibold"
         >
-          Schedule Meeting
+          Save Changes
         </Button>
       </div>
     </form>

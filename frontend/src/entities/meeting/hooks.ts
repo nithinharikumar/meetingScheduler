@@ -1,23 +1,75 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchRooms } from '../room/api';
-import { fetchMeetings, bookMeeting, cancelMeeting, fetchMeetingStats } from './api';
+import { fetchRooms, createRoom, updateRoom, deleteRoom } from '../room/api';
+import { fetchMeetings, bookMeeting, cancelMeeting, fetchMeetingStats, updateMeeting } from './api';
 import type { Meeting } from './types';
 import { toast } from 'sonner';
+
+// ────────────────────────────────────────────────────────
+// Room Hooks
+// ────────────────────────────────────────────────────────
 
 export const useRooms = () => {
   return useQuery({
     queryKey: ['rooms'],
     queryFn: fetchRooms,
-    staleTime: 60 * 1000, // Rooms are static, cache for 1 minute
+    staleTime: 60 * 1000,
   });
 };
+
+export const useCreateRoom = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createRoom,
+    onSuccess: (room) => {
+      toast.success(`Room "${room.name}" created successfully!`);
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.error?.message || err.message || 'Failed to create room');
+    },
+  });
+};
+
+export const useUpdateRoom = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { name?: string; capacity?: number; description?: string } }) =>
+      updateRoom(id, data),
+    onSuccess: (room) => {
+      toast.success(`Room "${room.name}" updated!`);
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      queryClient.invalidateQueries({ queryKey: ['meetings'] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.error?.message || err.message || 'Failed to update room');
+    },
+  });
+};
+
+export const useDeleteRoom = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteRoom,
+    onSuccess: () => {
+      toast.success('Room deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.error?.message || err.message || 'Failed to delete room');
+    },
+  });
+};
+
+// ────────────────────────────────────────────────────────
+// Meeting Hooks
+// ────────────────────────────────────────────────────────
 
 export const useMeetings = (filters: { date?: string; roomId?: string } = {}) => {
   return useQuery({
     queryKey: ['meetings', filters],
     queryFn: () => fetchMeetings(filters),
-    staleTime: 15 * 1000, // Fresh for 15 seconds
-    refetchInterval: 30 * 1000, // Refetch every 30 seconds in background
+    staleTime: 15 * 1000,
+    refetchInterval: 30 * 1000,
   });
 };
 
@@ -27,13 +79,10 @@ export const useBookMeeting = (filters: { date?: string; roomId?: string } = {})
   return useMutation({
     mutationFn: bookMeeting,
     onMutate: async (newMeetingDTO) => {
-      // Cancel outgoing refetches so they don't overwrite our optimistic update
       await queryClient.cancelQueries({ queryKey: ['meetings', filters] });
 
-      // Snapshot previous meetings
       const previousMeetings = queryClient.getQueryData<Meeting[]>(['meetings', filters]);
 
-      // Optimistically insert the new meeting
       if (previousMeetings) {
         const tempMeeting: Meeting = {
           _id: `temp-${Date.now()}`,
@@ -61,11 +110,9 @@ export const useBookMeeting = (filters: { date?: string; roomId?: string } = {})
       return { previousMeetings };
     },
     onError: (err: any, _newMeetingDTO, context) => {
-      // Rollback to previous state
       if (context?.previousMeetings) {
         queryClient.setQueryData(['meetings', filters], context.previousMeetings);
       }
-      
       const errMsg = err.message || 'Failed to schedule meeting';
       toast.error(errMsg);
     },
@@ -73,10 +120,27 @@ export const useBookMeeting = (filters: { date?: string; roomId?: string } = {})
       toast.success(`Meeting scheduled in room ${data.room.name}!`);
     },
     onSettled: () => {
-      // Refetch meetings and rooms to make sure we're in sync
       queryClient.invalidateQueries({ queryKey: ['meetings'] });
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
       queryClient.invalidateQueries({ queryKey: ['meeting-stats'] });
+    },
+  });
+};
+
+export const useUpdateMeeting = (filters: { date?: string; roomId?: string } = {}) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, dto }: { id: string; dto: { title?: string; startTime?: string; endTime?: string; roomId?: string } }) =>
+      updateMeeting(id, dto),
+    onSuccess: (data) => {
+      toast.success(`Meeting "${data.title}" updated successfully!`);
+      queryClient.invalidateQueries({ queryKey: ['meetings'] });
+      queryClient.invalidateQueries({ queryKey: ['meeting-stats'] });
+    },
+    onError: (err: any) => {
+      const errMsg = err?.response?.data?.error?.message || err.message || 'Failed to update meeting';
+      toast.error(errMsg);
     },
   });
 };
@@ -92,7 +156,6 @@ export const useCancelMeeting = (filters: { date?: string; roomId?: string } = {
       const previousMeetings = queryClient.getQueryData<Meeting[]>(['meetings', filters]);
 
       if (previousMeetings) {
-        // Optimistically change meeting status to cancelled
         const updated = previousMeetings.map((m) =>
           m._id === meetingId ? { ...m, status: 'CANCELLED' as const } : m
         );
@@ -123,7 +186,7 @@ export const useMeetingStats = (date: string) => {
   return useQuery({
     queryKey: ['meeting-stats', date],
     queryFn: () => fetchMeetingStats(date),
-    staleTime: 10 * 1000, // Stats stay fresh for 10 seconds
-    refetchInterval: 30 * 1000, // Refetch every 30 seconds
+    staleTime: 10 * 1000,
+    refetchInterval: 30 * 1000,
   });
 };

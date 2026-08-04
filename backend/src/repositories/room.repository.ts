@@ -26,6 +26,20 @@ export class RoomRepository {
     return room.save();
   }
 
+  async update(id: string, data: Partial<IRoom>): Promise<IRoomDocument | null> {
+    return RoomModel.findByIdAndUpdate(
+      id,
+      { $set: data },
+      { new: true, runValidators: true }
+    )
+      .lean<IRoomDocument>()
+      .exec();
+  }
+
+  async delete(id: string): Promise<IRoomDocument | null> {
+    return RoomModel.findByIdAndDelete(id).lean<IRoomDocument>().exec();
+  }
+
   async count(): Promise<number> {
     return RoomModel.countDocuments();
   }

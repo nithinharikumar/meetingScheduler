@@ -2,9 +2,58 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSidebarStore } from '../../shared/stores/sidebarStore';
 import { useUIStore } from '../../shared/hooks/useUIStore';
-import { Calendar, ChevronLeft, ChevronRight, X, LayoutDashboard, CalendarDays } from 'lucide-react';
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  LayoutDashboard,
+  CalendarDays,
+  Settings,
+  DoorOpen,
+  Presentation,
+  Coffee,
+  Zap,
+  Leaf,
+  Flame,
+  Star,
+  Hexagon,
+  BookOpen,
+  Globe,
+} from 'lucide-react';
 import { Badge, getRoomBadgeVariant } from '../../shared/ui/badge';
 import { useRooms as useRoomsHook } from '../../entities/meeting/hooks';
+
+// Deterministic icon assignment per room — cycles through a palette of icons
+const ROOM_ICONS = [DoorOpen, Presentation, Coffee, Zap, Leaf, Flame, Star, Hexagon, BookOpen, Globe];
+const ROOM_COLORS = [
+  'text-purple-500',
+  'text-blue-500',
+  'text-emerald-500',
+  'text-amber-500',
+  'text-pink-500',
+  'text-red-500',
+  'text-cyan-500',
+  'text-indigo-500',
+  'text-lime-500',
+  'text-orange-500',
+];
+const ROOM_BG = [
+  'bg-purple-500',
+  'bg-blue-500',
+  'bg-emerald-500',
+  'bg-amber-500',
+  'bg-pink-500',
+  'bg-red-500',
+  'bg-cyan-500',
+  'bg-indigo-500',
+  'bg-lime-500',
+  'bg-orange-500',
+];
+
+const getRoomIcon = (index: number) => ROOM_ICONS[index % ROOM_ICONS.length];
+const getRoomColor = (index: number) => ROOM_COLORS[index % ROOM_COLORS.length];
+const getRoomDotColor = (index: number) => ROOM_BG[index % ROOM_BG.length];
 
 export const Sidebar: React.FC = () => {
   const { collapsed, toggleCollapsed, mobileMenu, setMobileMenu } = useSidebarStore();
@@ -27,7 +76,6 @@ export const Sidebar: React.FC = () => {
     setSelectedDate(new Date().toISOString().split('T')[0]);
   };
 
-  // Nav Items
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'meetings', label: 'Meetings List', icon: CalendarDays },
@@ -52,6 +100,7 @@ export const Sidebar: React.FC = () => {
                 setActiveTab(item.id as any);
                 setMobileMenu(false);
               }}
+              title={collapsed ? item.label : undefined}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer ${
                 isActive
                   ? 'bg-primary text-primary-foreground shadow-md shadow-primary/10'
@@ -116,16 +165,17 @@ export const Sidebar: React.FC = () => {
       <hr className="border-t border-border/60 mx-4" />
 
       {/* Room Filters Section */}
-      <div className="flex-1 p-4 space-y-2 overflow-y-auto">
+      <div className="flex-1 p-4 space-y-1.5 overflow-y-auto">
         {!collapsed && (
           <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block px-3 mb-2">
             Rooms Filter
           </span>
         )}
-        
+
         {/* All Rooms option */}
         <button
           onClick={() => setSelectedRoomId(null)}
+          title={collapsed ? 'All Rooms' : undefined}
           className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-colors duration-200 cursor-pointer ${
             selectedRoomId === null
               ? 'bg-card text-foreground border border-border/80 shadow-sm'
@@ -133,19 +183,23 @@ export const Sidebar: React.FC = () => {
           }`}
         >
           <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${selectedRoomId === null ? 'bg-primary' : 'bg-muted-foreground/45'}`}></span>
-            <span>All Rooms</span>
+            <span className={`w-2 h-2 rounded-full shrink-0 ${selectedRoomId === null ? 'bg-primary' : 'bg-muted-foreground/45'}`}></span>
+            {!collapsed && <span>All Rooms</span>}
           </div>
           {!collapsed && <span className="text-[10px] text-muted-foreground">({rooms.length})</span>}
         </button>
 
-        {rooms.map((room) => {
+        {rooms.map((room, index) => {
           const isSelected = selectedRoomId === room._id;
           const badgeVariant = getRoomBadgeVariant(room.name);
+          const RoomIcon = getRoomIcon(index);
+          const iconColor = getRoomColor(index);
+          const dotColor = getRoomDotColor(index);
           return (
             <button
               key={room._id}
               onClick={() => setSelectedRoomId(room._id)}
+              title={collapsed ? `${room.name} (${room.capacity} seats)` : undefined}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-colors duration-200 cursor-pointer ${
                 isSelected
                   ? 'bg-card text-foreground border border-border/80 shadow-sm'
@@ -153,22 +207,38 @@ export const Sidebar: React.FC = () => {
               }`}
             >
               <div className="flex items-center gap-2 truncate">
-                <span className={`w-2 h-2 rounded-full shrink-0 ${
-                  badgeVariant === 'room1' ? 'bg-purple-500' :
-                  badgeVariant === 'room2' ? 'bg-blue-500' :
-                  badgeVariant === 'room3' ? 'bg-emerald-500' :
-                  badgeVariant === 'room4' ? 'bg-amber-500' : 'bg-pink-500'
-                }`}></span>
-                <span className="truncate">{room.name}</span>
+                <RoomIcon className={`w-3.5 h-3.5 shrink-0 ${iconColor}`} />
+                {!collapsed && <span className="truncate">{room.name}</span>}
               </div>
               {!collapsed && (
-                <Badge variant={badgeVariant} className="px-1 text-[9px] scale-90 border-0">
+                <Badge variant={badgeVariant} className="px-1 text-[9px] scale-90 border-0 shrink-0">
                   {room.capacity}
                 </Badge>
               )}
             </button>
           );
         })}
+      </div>
+
+      <hr className="border-t border-border/60 mx-4" />
+
+      {/* Settings Button */}
+      <div className="p-4 space-y-1">
+        <button
+          onClick={() => {
+            setActiveTab('settings');
+            setMobileMenu(false);
+          }}
+          title={collapsed ? 'Settings' : undefined}
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer ${
+            activeTab === 'settings'
+              ? 'bg-primary text-primary-foreground shadow-md shadow-primary/10'
+              : 'text-muted-foreground hover:bg-muted-foreground/10 hover:text-foreground'
+          }`}
+        >
+          <Settings className="w-4 h-4 shrink-0" />
+          {!collapsed && <span>Settings</span>}
+        </button>
       </div>
 
       {/* Collapse Toggle Button */}
@@ -197,7 +267,7 @@ export const Sidebar: React.FC = () => {
         </div>
       </motion.aside>
 
-      {/* Mobile Drawer (visible on mobile only, animated slide-in overlay) */}
+      {/* Mobile Drawer */}
       <AnimatePresence>
         {mobileMenu && (
           <>
@@ -217,7 +287,6 @@ export const Sidebar: React.FC = () => {
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className="md:hidden fixed inset-y-0 left-0 z-50 w-72 h-full shadow-2xl"
             >
-              {/* Close Button on Mobile Drawer */}
               <div className="relative h-full">
                 <button
                   onClick={() => setMobileMenu(false)}
@@ -225,7 +294,6 @@ export const Sidebar: React.FC = () => {
                 >
                   <X className="w-4 h-4" />
                 </button>
-                {/* Clone of sidebar contents with collapsed false */}
                 <div className="h-full">
                   <SidebarContentMobile />
                 </div>
@@ -238,7 +306,7 @@ export const Sidebar: React.FC = () => {
   );
 };
 
-// Sub-component for Mobile Drawer content (never collapsed)
+// ─── Mobile sidebar (never collapsed) ───────────────────────────────────────
 const SidebarContentMobile: React.FC = () => {
   const { setMobileMenu } = useSidebarStore();
   const { selectedDate, setSelectedDate, selectedRoomId, setSelectedRoomId, activeTab, setActiveTab } = useUIStore();
@@ -340,15 +408,12 @@ const SidebarContentMobile: React.FC = () => {
       <hr className="border-t border-border/60 mx-4" />
 
       {/* Room Filters Section */}
-      <div className="flex-1 p-4 space-y-2 overflow-y-auto">
+      <div className="flex-1 p-4 space-y-1.5 overflow-y-auto">
         <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block px-3 mb-2">
           Rooms Filter
         </span>
         <button
-          onClick={() => {
-            setSelectedRoomId(null);
-            setMobileMenu(false);
-          }}
+          onClick={() => { setSelectedRoomId(null); setMobileMenu(false); }}
           className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-colors duration-200 cursor-pointer ${
             selectedRoomId === null
               ? 'bg-card text-foreground border border-border/80 shadow-sm'
@@ -362,16 +427,15 @@ const SidebarContentMobile: React.FC = () => {
           <span className="text-[10px] text-muted-foreground">({rooms.length})</span>
         </button>
 
-        {rooms.map((room) => {
+        {rooms.map((room, index) => {
           const isSelected = selectedRoomId === room._id;
           const badgeVariant = getRoomBadgeVariant(room.name);
+          const RoomIcon = getRoomIcon(index);
+          const iconColor = getRoomColor(index);
           return (
             <button
               key={room._id}
-              onClick={() => {
-                setSelectedRoomId(room._id);
-                setMobileMenu(false);
-              }}
+              onClick={() => { setSelectedRoomId(room._id); setMobileMenu(false); }}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-colors duration-200 cursor-pointer ${
                 isSelected
                   ? 'bg-card text-foreground border border-border/80 shadow-sm'
@@ -379,20 +443,32 @@ const SidebarContentMobile: React.FC = () => {
               }`}
             >
               <div className="flex items-center gap-2 truncate">
-                <span className={`w-2 h-2 rounded-full shrink-0 ${
-                  badgeVariant === 'room1' ? 'bg-purple-500' :
-                  badgeVariant === 'room2' ? 'bg-blue-500' :
-                  badgeVariant === 'room3' ? 'bg-emerald-500' :
-                  badgeVariant === 'room4' ? 'bg-amber-500' : 'bg-pink-500'
-                }`}></span>
+                <RoomIcon className={`w-3.5 h-3.5 shrink-0 ${iconColor}`} />
                 <span className="truncate">{room.name}</span>
               </div>
-              <Badge variant={badgeVariant} className="px-1 text-[9px] scale-90 border-0">
+              <Badge variant={badgeVariant} className="px-1 text-[9px] scale-90 border-0 shrink-0">
                 {room.capacity}
               </Badge>
             </button>
           );
         })}
+      </div>
+
+      <hr className="border-t border-border/60 mx-4" />
+
+      {/* Settings */}
+      <div className="p-4">
+        <button
+          onClick={() => { setActiveTab('settings'); setMobileMenu(false); }}
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer ${
+            activeTab === 'settings'
+              ? 'bg-primary text-primary-foreground shadow-md shadow-primary/10'
+              : 'text-muted-foreground hover:bg-muted-foreground/10 hover:text-foreground'
+          }`}
+        >
+          <Settings className="w-4 h-4 shrink-0" />
+          <span>Settings</span>
+        </button>
       </div>
     </div>
   );

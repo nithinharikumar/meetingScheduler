@@ -32,3 +32,12 @@ export const fetchMeetingStats = async (date: string): Promise<MeetingStats> => 
   const response = await axiosClient.get<{ success: boolean; data: MeetingStats }>('/meetings/stats', { params });
   return (response as any).data;
 };
+
+export const updateMeeting = async (
+  id: string,
+  dto: { title?: string; startTime?: string; endTime?: string; roomId?: string }
+): Promise<Meeting> => {
+  const response = await axiosClient.put<{ success: boolean; data: Meeting }>(`/meetings/${id}`, dto);
+  return (response as any).data;
+};
+

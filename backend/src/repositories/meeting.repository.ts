@@ -25,7 +25,7 @@ export class MeetingRepository {
       query.room = filters.roomId;
     }
 
-    return MeetingModel.find(query, 'title room startTime endTime status')
+    return MeetingModel.find(query, 'title room startTime endTime status createdAt')
       .populate('room', 'name capacity description')
       .sort({ startTime: 1 })
       .lean<IMeetingDocument[]>()
@@ -37,7 +37,7 @@ export class MeetingRepository {
    * Uses projection to fetch only needed properties.
    */
   async findById(id: string): Promise<IMeetingDocument | null> {
-    return MeetingModel.findById(id, 'title room startTime endTime status')
+    return MeetingModel.findById(id, 'title room startTime endTime status createdAt')
       .populate('room', 'name capacity description')
       .lean<IMeetingDocument>()
       .exec();
@@ -71,6 +71,24 @@ export class MeetingRepository {
       options
     ).populate('room', 'name capacity description').exec();
   }
+
+  /**
+   * Updates editable fields of a meeting (title, startTime, endTime, room).
+   * Returns the updated document populated with room details.
+   */
+  async update(
+    id: string,
+    data: { title?: string; startTime?: Date; endTime?: Date; room?: string }
+  ): Promise<IMeetingDocument | null> {
+    return MeetingModel.findByIdAndUpdate(
+      id,
+      { $set: data },
+      { new: true, runValidators: true }
+    )
+      .populate('room', 'name capacity description')
+      .exec();
+  }
+
 
   /**
    * Finds overlapping confirmed meetings for a specific room and timeframe.
@@ -241,6 +259,7 @@ export class MeetingRepository {
                   startTime: 1,
                   endTime: 1,
                   status: 1,
+                  createdAt: 1,
                   room: {
                     _id: '$roomDetails._id',
                     name: '$roomDetails.name',

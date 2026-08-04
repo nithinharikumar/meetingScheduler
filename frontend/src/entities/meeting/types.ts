@@ -15,6 +15,7 @@ export interface BookMeetingDTO {
   title: string;
   startTime: string;
   endTime: string;
+  roomId?: string;
 }
 
 export interface MeetingStats {
