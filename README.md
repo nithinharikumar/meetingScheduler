@@ -66,7 +66,7 @@ A visual timeline displaying all meetings for a specific date across all rooms.
 cd backend
 npm install
 # Seed the initial database (creates the SuperAdmin account and 5 default rooms)
-npx ts-node src/config/seed.ts 
+npm run seed 
 # Start the backend development server
 npm run dev
 ```
