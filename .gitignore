@@ -1,0 +1,6 @@
+# Database data folder
+data/
+
+# OS/System files
+.DS_Store
+Thumbs.db
