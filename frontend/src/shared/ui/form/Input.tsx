@@ -1,10 +1,9 @@
 import React, { forwardRef } from 'react';
 import { FieldWrapper } from './FieldWrapper';
-import { FieldError } from 'react-hook-form';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
-  error?: FieldError | string;
+  error?: { message?: string } | string;
   wrapperClassName?: string;
 }
 

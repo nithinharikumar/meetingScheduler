@@ -32,10 +32,16 @@ axiosClient.interceptors.response.use(
   },
   (error) => {
     // Normalizes error structure to a standard shape: { code: string, message: string, details?: any }
+    const errorData = error.response?.data?.error;
+    let message = errorData?.message || error.message || 'An unexpected error occurred.';
+    if (errorData?.code === 'VALIDATION_ERROR' && Array.isArray(errorData.details)) {
+      message = errorData.details.map((d: any) => d.message).join(', ');
+    }
+
     const normalizedError = {
-      code: error.response?.data?.error?.code || 'UNKNOWN_ERROR',
-      message: error.response?.data?.error?.message || error.message || 'An unexpected error occurred.',
-      details: error.response?.data?.error?.details || null,
+      code: errorData?.code || 'UNKNOWN_ERROR',
+      message,
+      details: errorData?.details || null,
       status: error.response?.status || 500,
     };
 

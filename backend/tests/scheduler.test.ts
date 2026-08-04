@@ -250,4 +250,64 @@ describe('Meeting Scheduler API & Algorithm Tests', () => {
       expect(statsRes.body.data.mostUsedRoom).toBe('Boardroom');
     });
   });
+
+  describe('Manual Room Selection', () => {
+    test('Should book successfully in a specific room when available', async () => {
+      const roomsRes = await request(app).get('/api/rooms');
+      const targetRoom = roomsRes.body.data.find((r: any) => r.name === 'Lovelace');
+      expect(targetRoom).toBeDefined();
+
+      const startTime = new Date();
+      startTime.setHours(startTime.getHours() + 4);
+      const endTime = new Date(startTime);
+      endTime.setHours(endTime.getHours() + 1);
+
+      const res = await request(app)
+        .post('/api/meetings')
+        .send({
+          title: 'Manual Lovelace Booking',
+          startTime: startTime.toISOString(),
+          endTime: endTime.toISOString(),
+          roomId: targetRoom._id,
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.room.name).toBe('Lovelace');
+    });
+
+    test('Should reject booking (409) if the manually selected room is occupied', async () => {
+      const roomsRes = await request(app).get('/api/rooms');
+      const targetRoom = roomsRes.body.data.find((r: any) => r.name === 'Hopper');
+      expect(targetRoom).toBeDefined();
+
+      const startTime = new Date();
+      startTime.setHours(startTime.getHours() + 5);
+      const endTime = new Date(startTime);
+      endTime.setHours(endTime.getHours() + 1);
+
+      // First book it
+      const res1 = await request(app)
+        .post('/api/meetings')
+        .send({
+          title: 'First Hopper Booking',
+          startTime: startTime.toISOString(),
+          endTime: endTime.toISOString(),
+          roomId: targetRoom._id,
+        });
+      expect(res1.status).toBe(201);
+
+      // Try to book the same room again at the same time
+      const res2 = await request(app)
+        .post('/api/meetings')
+        .send({
+          title: 'Conflict Hopper Booking',
+          startTime: startTime.toISOString(),
+          endTime: endTime.toISOString(),
+          roomId: targetRoom._id,
+        });
+      expect(res2.status).toBe(409);
+      expect(res2.body.error.message).toContain('occupied');
+    });
+  });
 });

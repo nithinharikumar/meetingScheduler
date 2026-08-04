@@ -31,7 +31,7 @@ export class SchedulerService {
    * Automatically allocates the first available room for the given timeframe.
    * Uses a Mutex lock to prevent race conditions (double booking) under high concurrency.
    */
-  async bookMeeting(title: string, startTime: Date, endTime: Date): Promise<IMeetingDocument> {
+  async bookMeeting(title: string, startTime: Date, endTime: Date, roomId?: string): Promise<IMeetingDocument> {
     if (startTime >= endTime) {
       throw new Error('Start time must be before end time.');
     }
@@ -62,25 +62,41 @@ export class SchedulerService {
           session || undefined
         );
 
-        // 2. Fetch all rooms
-        const allRooms = await this.roomRepository.findAll();
+        let selectedRoom;
 
-        if (allRooms.length === 0) {
-          throw new Error('No meeting rooms exist in the system.');
-        }
+        if (roomId) {
+          // Manual booking: check if room is busy
+          const busyIdsStr = busyRoomIds.map((id) => id.toString());
+          if (busyIdsStr.includes(roomId)) {
+            throw new Error('The selected room is occupied during the requested timeframe.');
+          }
 
-        // 3. Find the first room not in the busy list
-        const busyIdsStr = busyRoomIds.map((id) => id.toString());
-        const availableRoom = allRooms.find((room) => !busyIdsStr.includes(room._id.toString()));
+          // Verify room exists
+          const room = await this.roomRepository.findById(roomId);
+          if (!room) {
+            throw new Error('Selected room does not exist.');
+          }
+          selectedRoom = room;
+        } else {
+          // Automatic booking: Find the first available room
+          const allRooms = await this.roomRepository.findAll();
 
-        if (!availableRoom) {
-          throw new Error('No rooms are available during the requested time.');
+          if (allRooms.length === 0) {
+            throw new Error('No meeting rooms exist in the system.');
+          }
+
+          const busyIdsStr = busyRoomIds.map((id) => id.toString());
+          selectedRoom = allRooms.find((room) => !busyIdsStr.includes(room._id.toString()));
+
+          if (!selectedRoom) {
+            throw new Error('No rooms are available during the requested time.');
+          }
         }
 
         // 4. Create and save the meeting
         const meetingData = {
           title,
-          room: availableRoom._id,
+          room: selectedRoom._id,
           startTime,
           endTime,
           status: 'CONFIRMED' as const,

@@ -35,6 +35,53 @@ const formSchema = z
 
 type FormValues = z.infer<typeof formSchema>;
 
+const getDefaultTimes = (selectedDateStr: string) => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const todayStr = `${year}-${month}-${day}`;
+
+  if (selectedDateStr === todayStr) {
+    const now = new Date();
+    const currentHour = now.getHours();
+
+    const startHour = (currentHour + 1) % 24;
+    const endHour = (currentHour + 2) % 24;
+
+    const startStr = `${String(startHour).padStart(2, '0')}:00`;
+    const endStr = `${String(endHour).padStart(2, '0')}:00`;
+
+    let startDate = selectedDateStr;
+    let endDate = selectedDateStr;
+
+    if (currentHour === 23) {
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tYear = tomorrow.getFullYear();
+      const tMonth = String(tomorrow.getMonth() + 1).padStart(2, '0');
+      const tDay = String(tomorrow.getDate()).padStart(2, '0');
+      const tomorrowStr = `${tYear}-${tMonth}-${tDay}`;
+      startDate = tomorrowStr;
+      endDate = tomorrowStr;
+    }
+
+    return {
+      startDate,
+      startTime: startStr,
+      endDate,
+      endTime: endStr,
+    };
+  }
+
+  return {
+    startDate: selectedDateStr,
+    startTime: '09:00',
+    endDate: selectedDateStr,
+    endTime: '10:00',
+  };
+};
+
 interface CreateMeetingFormProps {
   onSuccess: () => void;
 }
@@ -42,6 +89,8 @@ interface CreateMeetingFormProps {
 export const CreateMeetingForm: React.FC<CreateMeetingFormProps> = ({ onSuccess }) => {
   const selectedDate = useUIStore((state) => state.selectedDate);
   const { mutateAsync: bookMeeting, isPending } = useBookMeeting({ date: selectedDate });
+
+  const defaultTimes = getDefaultTimes(selectedDate);
 
   const {
     register,
@@ -52,21 +101,22 @@ export const CreateMeetingForm: React.FC<CreateMeetingFormProps> = ({ onSuccess 
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: '',
-      startDate: selectedDate,
-      startTime: '09:00',
-      endDate: selectedDate,
-      endTime: '10:00',
+      startDate: defaultTimes.startDate,
+      startTime: defaultTimes.startTime,
+      endDate: defaultTimes.endDate,
+      endTime: defaultTimes.endTime,
     },
   });
 
   // Reset form default values when active calendar date changes
   useEffect(() => {
+    const currentDefaults = getDefaultTimes(selectedDate);
     reset({
       title: '',
-      startDate: selectedDate,
-      startTime: '09:00',
-      endDate: selectedDate,
-      endTime: '10:00',
+      startDate: currentDefaults.startDate,
+      startTime: currentDefaults.startTime,
+      endDate: currentDefaults.endDate,
+      endTime: currentDefaults.endTime,
     });
   }, [selectedDate, reset]);
 

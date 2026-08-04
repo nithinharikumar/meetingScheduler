@@ -39,13 +39,14 @@ export const getMeetingById = asyncHandler(async (req: Request, res: Response) =
 });
 
 export const bookMeeting = asyncHandler(async (req: Request, res: Response) => {
-  const { title, startTime, endTime } = req.body;
+  const { title, startTime, endTime, roomId } = req.body;
 
   try {
     const meeting = await schedulerService.bookMeeting(
       title,
       new Date(startTime),
-      new Date(endTime)
+      new Date(endTime),
+      roomId
     );
 
     res.status(201).json({
@@ -56,13 +57,15 @@ export const bookMeeting = asyncHandler(async (req: Request, res: Response) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown scheduling error';
     
-    // Check if the error is due to unavailable rooms
-    if (message.includes('No rooms are available')) {
+    // Check if the error is due to unavailable rooms (auto or manual)
+    if (message.includes('No rooms are available') || message.includes('occupied')) {
       res.status(409).json({
         success: false,
         error: {
           code: 'ROOMS_OCCUPIED',
-          message: 'All meeting rooms are occupied during the requested timeframe.',
+          message: message.includes('occupied') 
+            ? 'The selected meeting room is occupied during the requested timeframe.'
+            : 'All meeting rooms are occupied during the requested timeframe.',
         },
       });
       return;

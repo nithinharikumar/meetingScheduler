@@ -13,15 +13,13 @@ export const createMeetingSchema = z.object({
       .string({
         required_error: 'Start time is required',
       })
-      .datetime({ message: 'Start time must be a valid ISO datetime string' })
-      .refine((val) => new Date(val) > new Date(), {
-        message: 'Start time must be in the future',
-      }),
+      .datetime({ message: 'Start time must be a valid ISO datetime string' }),
     endTime: z
       .string({
         required_error: 'End time is required',
       })
       .datetime({ message: 'End time must be a valid ISO datetime string' }),
+    roomId: z.string().optional(),
   }).refine(
     (data) => {
       const start = new Date(data.startTime);
