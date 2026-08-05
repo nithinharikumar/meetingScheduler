@@ -4,6 +4,7 @@ import { MeetingRepository } from '../repositories/meeting.repository';
 import { IMeetingDocument } from '../interfaces/meeting.interface';
 
 // Simple in-memory lock to prevent race conditions in single-instance Node applications
+//it is   used    when we are checking    the room      available at teh same time
 class Mutex {
   private queue: Promise<any> = Promise.resolve();
 
