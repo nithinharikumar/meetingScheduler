@@ -45,6 +45,80 @@ A visual timeline displaying all meetings for a specific date across all rooms.
 - **User Management:** Create new users and adjust their roles securely.
 - **Room Management:** Add, edit, or remove physical meeting rooms.
 
+## 🖥️ User Interface & Management Guide
+
+This guide explains how to navigate SyncSpace, manage meeting rooms, schedule bookings, and administer system settings.
+
+### 🧭 Navigation, Filters & Settings (Sidebar & Header)
+- **Top Header**:
+  - **Quick Book (`+ Book` button)**: Click in the top-right corner to open the global booking dialog from any page.
+  - **Keyword Search**: Type in the search input to filter meetings instantly by title.
+  - **Theme Switcher**: Click the lightbulb/moon/laptop icons to cycle between Light, Dark, and System theme modes.
+  - **Profile Avatar**: Click to check your account details or log out.
+- **Left Sidebar**:
+  - **Navigation Links**: Toggle between **Dashboard** (Timeline Scheduler grid) and **Meetings List** (tabular registry).
+  - **Schedule Date**: Use the previous `‹` and next `›` buttons or click the date input to jump to a specific date. Click **TODAY** to reset.
+  - **Rooms Filter**: Click on a specific room button (e.g. *Conference Room A*) to filter all views to that room. Click **All Rooms** to remove filters.
+  - **Settings Navigation**: Select **Room Settings** or **User Settings** (visible to Admins/SuperAdmins) to access admin dashboards.
+  - **Collapse Toggle**: Click the collapse button at the bottom of the sidebar to gain workspace screen space.
+
+---
+
+### 📅 Dashboard View (Timeline Scheduler)
+*Provides a visual, room-by-room calendar timeline for the selected date.*
+- **Viewing the Scheduler Grid**: Meetings are mapped as colored blocks under their assigned room columns. The height and vertical offset of each card corresponds to its start and end times.
+- **Auto-Expanding Timeline**: The grid displays hours from your configured business hours but will auto-expand if any meeting falls outside that range.
+- **Viewing Meeting Details**: Click on any meeting card to open the **Meeting Details** modal (displays meeting title, room, capacity, and exact date/time range).
+- **Cancelling a Meeting**:
+  - Hover over a meeting block and click the **Trash** icon in the bottom-right corner of the block.
+  - Alternatively, click the meeting to open its details modal, and click **Cancel Booking**.
+  - Confirm the cancel prompt to free up the room instantly.
+- **Quick Booking** (Right Sidebar): Input a title, select a room (or leave on *Auto-allocate* to let the system select the first available slot), set start/end date & time, and click **Book Room**.
+
+---
+
+### 📝 Meetings View (Registry)
+*A full tabular registry of all system bookings with advanced search, pagination, and sorting.*
+- **Upcoming vs. Cancelled Tabs**: Toggle between the **Upcoming** (active reservations) and **Cancelled** tabs at the top of the table.
+- **Searching and Sorting**:
+  - Search by meeting title or room name using the top search bar.
+  - Click column headers (**Meeting Title**, **Room Assigned**, **Time Schedule**) to sort alphabetically or chronologically.
+- **Row Actions**: Click the three dots (`...`) icon at the end of any table row:
+  - **View Details**: Open the metadata modal.
+  - **Edit Meeting**: Opens an inline form to update the title, assigned room, or time slots.
+  - **Cancel Meeting** (Upcoming only): Cancels the reservation.
+- **Sidebar Booking**: Quick reservation form is pinned on the right for convenience.
+
+---
+
+### 🚪 Room Settings View (Room Management)
+*Accessible to Admins and SuperAdmins. Allows direct modification of the office floor plan.*
+- **Adding a Room**:
+  - Click **`+ Add New Room`** at the top right to expand the creation panel.
+  - Provide a name (e.g., *Zen Room*), capacity (seating limit, max 500), and optional description.
+  - Click **Create Room** to save.
+- **Inline Editing**:
+  - Click the **Pencil** icon on any room row to convert it into editable input fields.
+  - Modify fields directly and click the green Checkmark (**Check**) icon to save, or the red **X** to cancel.
+- **Deleting a Room**:
+  - Click the **Trash** icon on a room's row.
+  - Confirm the deletion in the dialog. *Note: The server prevents deleting rooms with active/upcoming meetings to preserve schedule integrity.*
+
+---
+
+### 👥 User Settings View (Users & Global Configuration)
+*Accessible to Admins and SuperAdmins. Configures global policies and controls accounts.*
+- **Global Settings (Business Hours)**:
+  - Modify the **Business Start Hour** and **Business End Hour** dropdowns.
+  - Changing these bounds dynamically scales the timeline grids of the Dashboard Scheduler for all users.
+- **Creating a User** (SuperAdmin only):
+  - Click **`Add User`** in the User Management header.
+  - Provide Name, Email, Password, and select their permission role (SuperAdmin, Admin, Manager, Employee).
+- **Managing User Roles & Access** (SuperAdmin only):
+  - Click the three dots (`...`) actions button on any user row.
+  - Select **Make Admin**, **Make Manager**, or **Make Employee** to promote or demote their privileges.
+  - Select **Delete User** to delete the account. Self-deletion and self-role updates are disabled for security.
+
 ## 🚀 How to Run Locally
 
 ### Prerequisites
